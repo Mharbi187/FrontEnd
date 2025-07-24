@@ -8,7 +8,7 @@ import React from 'react';
 function App() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-2xl p-6 md:p-8 transform hover:scale-105 transition-transform duration-300">
+      <div className="max-w-md w-full b g-white rounded-xl shadow-2xl p-6 md:p-8 transform hover:scale-105 transition-transform duration-300">
         <h1 className="text-3xl font-bold text-blue-600 mb-4 text-center">
           Welcome to Tailwind CSS
         </h1>
