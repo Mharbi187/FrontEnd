@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import  api  from '../api/axios';
+import api from '../api/axios';
 
 export default function Login() {
   const [formData, setFormData] = useState({
     email: '',
-    motdepasse: ''
+    mdp: '' // Changed from 'motdepasse' to 'mdp' to match backend
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -39,8 +39,8 @@ export default function Login() {
       newErrors.email = 'Email est invalide';
     }
 
-    if (!formData.motdepasse) {
-      newErrors.motdepasse = 'Mot de passe est requis';
+    if (!formData.mdp) { // Changed from 'motdepasse' to 'mdp'
+      newErrors.mdp = 'Mot de passe est requis'; // Changed error key
     }
 
     return newErrors;
@@ -58,7 +58,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await api.post('/auth/login', formData);
+      const response = await api.post('/users/login', formData);
       
       if (response.data.success) {
         // Store token and user data
@@ -142,24 +142,24 @@ export default function Login() {
             </div>
 
             <div>
-              <label htmlFor="motdepasse" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="mdp" className="block text-sm font-medium text-gray-700">
                 Mot de passe *
               </label>
               <input
-                id="motdepasse"
-                name="motdepasse"
+                id="mdp"
+                name="mdp" // Changed from 'motdepasse' to 'mdp'
                 type="password"
                 autoComplete="current-password"
                 required
-                value={formData.motdepasse}
+                value={formData.mdp}
                 onChange={handleChange}
                 className={`mt-1 block w-full border ${
-                  errors.motdepasse ? 'border-red-300 focus:border-red-300' : 'border-gray-300 focus:border-blue-500'
+                  errors.mdp ? 'border-red-300 focus:border-red-300' : 'border-gray-300 focus:border-blue-500'
                 } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 transition-colors`}
                 placeholder="••••••••"
               />
-              {errors.motdepasse && (
-                <p className="mt-1 text-sm text-red-600">{errors.motdepasse}</p>
+              {errors.mdp && (
+                <p className="mt-1 text-sm text-red-600">{errors.mdp}</p>
               )}
             </div>
 
