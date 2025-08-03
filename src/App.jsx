@@ -1,3 +1,4 @@
+// src/App.js
 import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -6,7 +7,6 @@ import Accueil from './pages/Accueil';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Services from './pages/Services';
-
 
 function App() {
   return (

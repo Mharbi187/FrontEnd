@@ -2,13 +2,15 @@ import { Link } from 'react-router-dom';
 
 export default function Navbar() {
   return (
-    <nav className="w-full bg-blue-600 shadow-lg">
+    <nav className="w-full bg-blue-600 shadow-lg font-['Inter']">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo and brand name on the left */}
+          {/* Logo on the left */}
           <div className="flex-shrink-0 flex items-center">
             <Link to="/" className="flex items-center">
-              <span className="ml-1 text-xl  font-bold text-white">Livrini</span>
+              <span className="text-white text-2xl font-bold tracking-tighter">
+                LIVRINI
+              </span>
             </Link>
           </div>
 
@@ -31,15 +33,24 @@ export default function Navbar() {
                 to="/login" 
                 className="text-blue-600 bg-white hover:bg-gray-100 px-4 py-2 rounded-md text-sm font-medium transition-colors"
               >
-                Login
+                Se Connecter
               </Link>
               <Link 
                 to="/register" 
                 className="text-white bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm"
               >
-                Register
+                S'inscrire
               </Link>
             </div>
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center">
+            <button className="text-white hover:text-blue-200 focus:outline-none">
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
