@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/axios';
+import { jwtDecode } from 'jwt-decode';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -51,54 +52,48 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      const response = await api.post('/users/login', formData);
+      // Ensure payload matches backend exactly
+      const payload = {
+        email: formData.email.trim(),
+        motdepasse: formData.motdepasse // Using motdepasse instead of mdp
+      };
+
+      console.log('Sending login request:', payload);
+      const response = await api.post('/users/login', payload);
+
       if (response.data.success) {
-        // Store token and user data
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Set default auth header
+        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
 
-        // Fetch role from backend
-        const roleResponse = await api.get('/users/role', {
-          headers: {
-            Authorization: `Bearer ${response.data.token}`
-          }
-        });
+        // Redirect based on role
+        const decodedToken = jwtDecode(response.data.token);
+        const role = decodedToken.role.toLowerCase();
+        const redirectPath = {
+          admin: '/admin-dashboard',
+          fournisseur: '/fournisseur-dashboard',
+          client: '/client-dashboard'
+        }[role] || '/';
 
-        if (roleResponse.data.success) {
-          const { role } = roleResponse.data;
-          switch (role) {
-            case 'admin':
-              navigate('/admin-dashboard', { replace: true });
-              break;
-            case 'client':
-              navigate('/client-dashboard', { replace: true });
-              break;
-            case 'fournisseur':
-              navigate('/fournisseur-dashboard', { replace: true });
-              break;
-            default:
-              navigate('/', { replace: true });
-          }
-        } else {
-          setErrors({ general: roleResponse.data.message || 'Erreur lors de la récupération du rôle' });
-        }
-      } else {
-        setErrors({
-          general: response.data.message || 'Email ou mot de passe incorrect'
-        });
+        navigate(redirectPath, { replace: true });
       }
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('Login error:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
+      
       setErrors({
         general: err.response?.data?.message || 
-                'Une erreur est survenue. Veuillez réessayer.'
+                'Échec de la connexion. Veuillez réessayer.'
       });
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Original JSX (unchanged)
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -152,24 +147,24 @@ export default function Login() {
               )}
             </div>
             <div>
-              <label htmlFor="mdp" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="motdepasse" className="block text-sm font-medium text-gray-700">
                 Mot de passe *
               </label>
               <input
-                id="mdp"
-                name="mdp"
+                id="motdepasse"
+                name="motdepasse" // Changed from 'mdp' to 'motdepasse'
                 type="password"
                 autoComplete="current-password"
                 required
-                value={formData.mdp}
+                value={formData.motdepasse} // Changed from 'mdp' to 'motdepasse'
                 onChange={handleChange}
                 className={`mt-1 block w-full border ${
-                  errors.mdp ? 'border-red-300 focus:border-red-300' : 'border-gray-300 focus:border-blue-500'
+                  errors.motdepasse ? 'border-red-300 focus:border-red-300' : 'border-gray-300 focus:border-blue-500'
                 } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 transition-colors`}
                 placeholder="••••••••"
               />
-              {errors.mdp && (
-                <p className="mt-1 text-sm text-red-600">{errors.mdp}</p>
+              {errors.motdepasse && (
+                <p className="mt-1 text-sm text-red-600">{errors.motdepasse}</p>
               )}
             </div>
             <div className="flex items-center justify-between">

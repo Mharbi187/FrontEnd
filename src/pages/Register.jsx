@@ -52,81 +52,51 @@ export default function Register() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
+  e.preventDefault();
+  const validationErrors = validateForm();
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    return;
+  }
 
-    setIsLoading(true);
-    try {
-      const { confirmPassword, ...registrationData } = formData;
-      console.log('Sending registration data:', registrationData);
-      const response = await api.post('/users/register', registrationData, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
+  setIsLoading(true);
+  try {
+    const { confirmPassword, ...userData } = formData;
+    
+    // Map to backend field names
+    const payload = {
+      ...userData,
+      mdp: userData.motdepasse
+    };
+
+    const response = await api.post('/users/register', payload);
+    
+    if (response.data.success) {
+      localStorage.setItem('token', response.data.token);
+      navigate('/login', { 
+        state: { 
+          registrationSuccess: true,
+          email: formData.email
+        } 
       });
-      console.log('Registration response:', response);
-
-      if (response.status === 201) {
-        // Store token and user data
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-
-        // Fetch role from backend
-        const roleResponse = await api.get('/users/role', {
-          headers: {
-            Authorization: `Bearer ${response.data.token}`
-          }
-        });
-
-        if (roleResponse.data.success) {
-          const { role } = roleResponse.data;
-          setRegistrationSuccess(true);
-          setTimeout(() => {
-            switch (role) {
-              case 'admin':
-                navigate('/admin-dashboard', { replace: true });
-                break;
-              case 'client':
-                navigate('/client-dashboard', { replace: true });
-                break;
-              case 'fournisseur':
-                navigate('/fournisseur-dashboard', { replace: true });
-                break;
-              default:
-                navigate('/', { replace: true });
-            }
-          }, 1500);
-        } else {
-          setErrors({ general: roleResponse.data.message || 'Erreur lors de la récupération du rôle' });
-        }
-      }
-    } catch (err) {
-      console.error('Full error details:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-        config: err.config
-      });
-      if (err.response?.data?.errors) {
-        const fieldErrors = {};
-        err.response.data.errors.forEach(e => {
-          fieldErrors[e.path] = e.message;
-        });
-        setErrors(fieldErrors);
-      } else {
-        setErrors({
-          general: err.response?.data?.message || 
-                  'Erreur de connexion au serveur. Veuillez réessayer plus tard.'
-        });
-      }
-    } finally {
-      setIsLoading(false);
     }
-  };
+  } catch (err) {
+    // Enhanced error handling
+    const backendErrors = err.response?.data?.errors || [];
+    const fieldErrors = {};
+    
+    backendErrors.forEach(error => {
+      fieldErrors[error.path] = error.message;
+    });
+
+    setErrors({
+      ...fieldErrors,
+      general: err.response?.data?.message || 'Erreur lors de l\'inscription'
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   if (registrationSuccess) {
     return (
