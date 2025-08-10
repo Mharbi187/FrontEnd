@@ -5,14 +5,12 @@ import api from '../api/axios';
 export default function Login() {
   const [formData, setFormData] = useState({
     email: '',
-    mdp: '' // Changed from 'motdepasse' to 'mdp' to match backend
+    motdepasse: ''
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Check for registration success message
   const registrationSuccess = location.state?.registrationSuccess;
   const registeredEmail = location.state?.email;
 
@@ -22,8 +20,6 @@ export default function Login() {
       ...prev,
       [name]: value
     }));
-
-    // Clear error when user types
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -38,9 +34,8 @@ export default function Login() {
     } else if (!emailRegex.test(formData.email)) {
       newErrors.email = 'Email est invalide';
     }
-
-    if (!formData.mdp) { // Changed from 'motdepasse' to 'mdp'
-      newErrors.mdp = 'Mot de passe est requis'; // Changed error key
+    if (!formData.motdepasse) {
+      newErrors.motdepasse = 'Mot de passe est requis';
     }
 
     return newErrors;
@@ -49,24 +44,44 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validateForm();
-
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
     setIsLoading(true);
-
     try {
       const response = await api.post('/users/login', formData);
-      
       if (response.data.success) {
         // Store token and user data
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
-        
-        // Redirect to home or previous location
-        navigate(location.state?.from || '/', { replace: true });
+
+        // Fetch role from backend
+        const roleResponse = await api.get('/users/role', {
+          headers: {
+            Authorization: `Bearer ${response.data.token}`
+          }
+        });
+
+        if (roleResponse.data.success) {
+          const { role } = roleResponse.data;
+          switch (role) {
+            case 'admin':
+              navigate('/admin-dashboard', { replace: true });
+              break;
+            case 'client':
+              navigate('/client-dashboard', { replace: true });
+              break;
+            case 'fournisseur':
+              navigate('/fournisseur-dashboard', { replace: true });
+              break;
+            default:
+              navigate('/', { replace: true });
+          }
+        } else {
+          setErrors({ general: roleResponse.data.message || 'Erreur lors de la récupération du rôle' });
+        }
       } else {
         setErrors({
           general: response.data.message || 'Email ou mot de passe incorrect'
@@ -83,6 +98,7 @@ export default function Login() {
     }
   };
 
+  // Original JSX (unchanged)
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -99,10 +115,8 @@ export default function Login() {
           </Link>
         </p>
       </div>
-
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-lg sm:rounded-xl sm:px-10 border border-gray-100">
-          {/* Show registration success message if redirected from register */}
           {registrationSuccess && (
             <div className="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded">
               <p className="text-sm text-green-600">
@@ -110,14 +124,11 @@ export default function Login() {
               </p>
             </div>
           )}
-
-          {/* Show general errors */}
           {errors.general && (
             <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded">
               <p className="text-sm text-red-600">{errors.general}</p>
             </div>
           )}
-
           <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -140,14 +151,13 @@ export default function Login() {
                 <p className="mt-1 text-sm text-red-600">{errors.email}</p>
               )}
             </div>
-
             <div>
               <label htmlFor="mdp" className="block text-sm font-medium text-gray-700">
                 Mot de passe *
               </label>
               <input
                 id="mdp"
-                name="mdp" // Changed from 'motdepasse' to 'mdp'
+                name="mdp"
                 type="password"
                 autoComplete="current-password"
                 required
@@ -162,7 +172,6 @@ export default function Login() {
                 <p className="mt-1 text-sm text-red-600">{errors.mdp}</p>
               )}
             </div>
-
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
@@ -175,7 +184,6 @@ export default function Login() {
                   Se souvenir de moi
                 </label>
               </div>
-
               <div className="text-sm">
                 <Link 
                   to="/forgot-password" 
@@ -185,7 +193,6 @@ export default function Login() {
                 </Link>
               </div>
             </div>
-
             <div>
               <button
                 type="submit"
@@ -210,4 +217,4 @@ export default function Login() {
       </div>
     </div>
   );
-} 
+}

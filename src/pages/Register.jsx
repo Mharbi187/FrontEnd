@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import  api  from '../api/axios';
+import api from '../api/axios';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -11,7 +11,6 @@ export default function Register() {
     adresse: '',
     confirmPassword: ''
   });
-
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
@@ -23,8 +22,6 @@ export default function Register() {
       ...prev,
       [name]: value
     }));
-    
-    // Clear error when user types
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -36,21 +33,17 @@ export default function Register() {
 
     if (!formData.nom.trim()) newErrors.nom = 'Nom est requis';
     if (!formData.prenom.trim()) newErrors.prenom = 'Prénom est requis';
-    
     if (!formData.email.trim()) {
       newErrors.email = 'Email est requis';
     } else if (!emailRegex.test(formData.email)) {
       newErrors.email = 'Email est invalide';
     }
-
     if (!formData.adresse.trim()) newErrors.adresse = 'Adresse est requise';
-    
     if (!formData.motdepasse) {
       newErrors.motdepasse = 'Mot de passe est requis';
     } else if (formData.motdepasse.length < 6) {
       newErrors.motdepasse = 'Minimum 6 caractères';
     }
-
     if (formData.motdepasse !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
     }
@@ -59,63 +52,81 @@ export default function Register() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  const validationErrors = validateForm();
-  
-  if (Object.keys(validationErrors).length > 0) {
-    setErrors(validationErrors);
-    return;
-  }
+    e.preventDefault();
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
 
-  setIsLoading(true);
-  
-  try {
-    const { confirmPassword, ...registrationData } = formData;
-    console.log('Sending registration data:', registrationData); // Add this line
-    
-    const response = await api.post('/users/register', registrationData, { // Changed endpoint
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    console.log('Registration response:', response); // Add this line
-    
-    if (response.status === 201) {
-      setRegistrationSuccess(true);
-      setTimeout(() => {
-        navigate('/login', { 
-          state: { 
-            registrationSuccess: true,
-            email: formData.email 
-          } 
+    setIsLoading(true);
+    try {
+      const { confirmPassword, ...registrationData } = formData;
+      console.log('Sending registration data:', registrationData);
+      const response = await api.post('/users/register', registrationData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('Registration response:', response);
+
+      if (response.status === 201) {
+        // Store token and user data
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+
+        // Fetch role from backend
+        const roleResponse = await api.get('/users/role', {
+          headers: {
+            Authorization: `Bearer ${response.data.token}`
+          }
         });
-      }, 1500);
-    }
-  } catch (err) {
-    console.error('Full error details:', {
-      message: err.message,
-      response: err.response?.data,
-      status: err.response?.status,
-      config: err.config
-    });
-    
-    if (err.response?.data?.errors) {
-      const fieldErrors = {};
-      err.response.data.errors.forEach(e => {
-        fieldErrors[e.path] = e.message;
+
+        if (roleResponse.data.success) {
+          const { role } = roleResponse.data;
+          setRegistrationSuccess(true);
+          setTimeout(() => {
+            switch (role) {
+              case 'admin':
+                navigate('/admin-dashboard', { replace: true });
+                break;
+              case 'client':
+                navigate('/client-dashboard', { replace: true });
+                break;
+              case 'fournisseur':
+                navigate('/fournisseur-dashboard', { replace: true });
+                break;
+              default:
+                navigate('/', { replace: true });
+            }
+          }, 1500);
+        } else {
+          setErrors({ general: roleResponse.data.message || 'Erreur lors de la récupération du rôle' });
+        }
+      }
+    } catch (err) {
+      console.error('Full error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        config: err.config
       });
-      setErrors(fieldErrors);
-    } else {
-      setErrors({
-        general: err.response?.data?.message || 
-                'Erreur de connexion au serveur. Veuillez réessayer plus tard.'
-      });
+      if (err.response?.data?.errors) {
+        const fieldErrors = {};
+        err.response.data.errors.forEach(e => {
+          fieldErrors[e.path] = e.message;
+        });
+        setErrors(fieldErrors);
+      } else {
+        setErrors({
+          general: err.response?.data?.message || 
+                  'Erreur de connexion au serveur. Veuillez réessayer plus tard.'
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   if (registrationSuccess) {
     return (
@@ -127,7 +138,7 @@ export default function Register() {
             </svg>
             <h2 className="mt-3 text-2xl font-bold text-gray-900">Inscription réussie!</h2>
             <p className="mt-2 text-gray-600">
-              Votre compte a été créé avec succès. Redirection vers la page de connexion...
+              Votre compte a été créé avec succès. Redirection en cours...
             </p>
           </div>
         </div>
@@ -135,6 +146,7 @@ export default function Register() {
     );
   }
 
+  // Original JSX for the registration form (unchanged)
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -151,7 +163,6 @@ export default function Register() {
           </Link>
         </p>
       </div>
-
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow-lg sm:rounded-xl sm:px-10 border border-gray-100">
           {errors.general && (
@@ -159,7 +170,6 @@ export default function Register() {
               <p className="text-sm text-red-600">{errors.general}</p>
             </div>
           )}
-
           <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
               <div className="sm:col-span-1">
@@ -182,7 +192,6 @@ export default function Register() {
                   <p className="mt-1 text-sm text-red-600">{errors.prenom}</p>
                 )}
               </div>
-
               <div className="sm:col-span-1">
                 <label htmlFor="nom" className="block text-sm font-medium text-gray-700">
                   Nom *
@@ -204,7 +213,6 @@ export default function Register() {
                 )}
               </div>
             </div>
-
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email *
@@ -226,7 +234,6 @@ export default function Register() {
                 <p className="mt-1 text-sm text-red-600">{errors.email}</p>
               )}
             </div>
-
             <div>
               <label htmlFor="adresse" className="block text-sm font-medium text-gray-700">
                 Adresse *
@@ -247,7 +254,6 @@ export default function Register() {
                 <p className="mt-1 text-sm text-red-600">{errors.adresse}</p>
               )}
             </div>
-
             <div>
               <label htmlFor="motdepasse" className="block text-sm font-medium text-gray-700">
                 Mot de passe *
@@ -272,7 +278,6 @@ export default function Register() {
                 <p className="mt-1 text-xs text-gray-500">Minimum 6 caractères</p>
               )}
             </div>
-
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 Confirmer le mot de passe *
@@ -294,7 +299,6 @@ export default function Register() {
                 <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
               )}
             </div>
-
             <div>
               <button
                 type="submit"
