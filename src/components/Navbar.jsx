@@ -28,17 +28,14 @@ const Navbar = () => {
     navigate('/login');
   };
 
-  // Don't show navbar on login/register pages
+  // Hide navbar only for dashboard pages
   if (
-  ['/login', '/register'].includes(location.pathname) ||
-  location.pathname.startsWith('/admin-dashboard') ||
-  location.pathname.startsWith('/client-dashboard') ||
-  location.pathname.startsWith('/fournisseur-dashboard')
-) 
-{
-  return null;
-}
-
+    location.pathname.startsWith('/admin-dashboard') ||
+    location.pathname.startsWith('/client-dashboard') ||
+    location.pathname.startsWith('/fournisseur-dashboard')
+  ) {
+    return null;
+  }
 
   // Guest Navigation
   if (!isLoggedIn) {
@@ -77,7 +74,7 @@ const Navbar = () => {
     );
   }
 
-  // Logged-in Navigation (simple top bar for dashboard layouts)
+  // Logged-in Navigation
   return (
     <nav className="w-full bg-blue-600 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
