@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaSave, FaArrowLeft } from 'react-icons/fa';
-import axios from 'axios';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { FaSave, FaArrowLeft } from "react-icons/fa";
+import axios from "axios";
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: "http://localhost:5000/api",
   headers: {
-    'Content-Type': 'application/json'
-  }
+    "Content-Type": "application/json",
+  },
 });
 
 export default function AdminCreateUserPage() {
@@ -17,34 +17,34 @@ export default function AdminCreateUserPage() {
   const [success, setSuccess] = useState(null);
 
   const [user, setUser] = useState({
-    nom: '',
-    prenom: '',
-    email: '',
-    role: 'client',
+    nom: "",
+    prenom: "",
+    email: "",
+    role: "client",
     adresse: {
-      rue: '',
-      ville: '',
-      codePostal: '',
-      pays: ''
-    }
+      rue: "",
+      ville: "",
+      codePostal: "",
+      pays: "",
+    },
   });
 
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
-    if (name.includes('adresse.')) {
-      const field = name.split('.')[1];
-      setUser(prev => ({
+
+    if (name.includes("adresse.")) {
+      const field = name.split(".")[1];
+      setUser((prev) => ({
         ...prev,
         adresse: {
           ...prev.adresse,
-          [field]: value
-        }
+          [field]: value,
+        },
       }));
     } else {
-      setUser(prev => ({ ...prev, [name]: value }));
+      setUser((prev) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -56,33 +56,33 @@ export default function AdminCreateUserPage() {
 
     // Basic validation
     if (!user.nom || !user.prenom || !user.email || !password) {
-      setError('All required fields must be filled');
+      setError("All required fields must be filled");
       setLoading(false);
       return;
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError("Password must be at least 8 characters");
       setLoading(false);
       return;
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const payload = {
         ...user,
-        motdepasse: password
+        mdp: password,
       };
 
-      await api.post('/users', payload, {
-        headers: { Authorization: `Bearer ${token}` }
+      await api.post("/users", payload, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      setSuccess('User created successfully');
-      setTimeout(() => navigate('/admin/users'), 1500);
+      setSuccess("User created successfully");
+      setTimeout(() => navigate("/admin/users"), 1500);
     } catch (err) {
-      console.error('Create user error:', err.response?.data);
-      setError(err.response?.data?.message || 'Failed to create user');
+      console.error("Create user error:", err.response?.data);
+      setError(err.response?.data?.message || "Failed to create user");
     } finally {
       setLoading(false);
     }
@@ -93,7 +93,7 @@ export default function AdminCreateUserPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Create New User</h1>
         <button
-          onClick={() => navigate('/admin-dashboard')}
+          onClick={() => navigate("/admin-dashboard")}
           className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
         >
           <FaArrowLeft /> Back to Users
@@ -101,9 +101,7 @@ export default function AdminCreateUserPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
-          {error}
-        </div>
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>
       )}
 
       {success && (
@@ -115,7 +113,9 @@ export default function AdminCreateUserPage() {
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Last Name (Nom)*</label>
+            <label className="block text-sm font-medium mb-1">
+              Last Name (Nom)*
+            </label>
             <input
               type="text"
               name="nom"
@@ -126,7 +126,9 @@ export default function AdminCreateUserPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">First Name (Prénom)*</label>
+            <label className="block text-sm font-medium mb-1">
+              First Name (Prénom)*
+            </label>
             <input
               type="text"
               name="prenom"
@@ -147,7 +149,7 @@ export default function AdminCreateUserPage() {
               required
             />
           </div>
-          
+
           <div className="md:col-span-2">
             <label className="block text-sm font-medium mb-1">Password*</label>
             <input
@@ -180,7 +182,9 @@ export default function AdminCreateUserPage() {
         <h3 className="text-lg font-medium mt-6 mb-3">Address</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Street (Rue)</label>
+            <label className="block text-sm font-medium mb-1">
+              Street (Rue)
+            </label>
             <input
               type="text"
               name="adresse.rue"
@@ -190,7 +194,9 @@ export default function AdminCreateUserPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">City (Ville)</label>
+            <label className="block text-sm font-medium mb-1">
+              City (Ville)
+            </label>
             <input
               type="text"
               name="adresse.ville"
@@ -200,7 +206,9 @@ export default function AdminCreateUserPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Postal Code (Code Postal)</label>
+            <label className="block text-sm font-medium mb-1">
+              Postal Code (Code Postal)
+            </label>
             <input
               type="text"
               name="adresse.codePostal"
@@ -210,7 +218,9 @@ export default function AdminCreateUserPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Country (Pays)</label>
+            <label className="block text-sm font-medium mb-1">
+              Country (Pays)
+            </label>
             <input
               type="text"
               name="adresse.pays"
@@ -227,7 +237,7 @@ export default function AdminCreateUserPage() {
             disabled={loading}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
-            <FaSave /> {loading ? 'Creating...' : 'Create User'}
+            <FaSave /> {loading ? "Creating..." : "Create User"}
           </button>
         </div>
       </form>

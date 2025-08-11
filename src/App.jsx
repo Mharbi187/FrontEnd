@@ -1,20 +1,25 @@
-import './App.css';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout';
-import Accueil from './pages/Accueil';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Services from './pages/Services';
-import ClientDashboard from './pages/ClientDashboard';
-import AdminDashboard from './pages/AdminDashboard';
-import FournisseurDashboard from './pages/FournisseurDashboard';
-import ProductPage from './pages/Produits';
-import { jwtDecode } from 'jwt-decode';
-import ProfilePage from './pages/ProfilePage';
-import AdminCreateUserPage from './pages/AdminCreateUserPage';
+import "./App.css";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import Layout from "./components/Layout";
+import Accueil from "./pages/Accueil";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Services from "./pages/Services";
+import ClientDashboard from "./pages/ClientDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import FournisseurDashboard from "./pages/FournisseurDashboard";
+import ProductPage from "./pages/Produits";
+import { jwtDecode } from "jwt-decode";
+import ProfilePage from "./pages/ProfilePage";
+import AdminCreateUserPage from "./pages/AdminCreateUserPage";
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   if (!token) {
     return <Navigate to="/" replace />;
   }
@@ -22,14 +27,22 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
   try {
     const decoded = jwtDecode(token);
     if (!allowedRoles.includes(decoded.role)) {
-      return <Navigate to="/" replace />;
+      // return <Navigate to="/" replace />;
     }
     return children;
   } catch (error) {
-    console.error('Error decoding JWT:', error);
-    localStorage.removeItem('token');
+    console.error("Error decoding JWT:", error);
+    localStorage.removeItem("token");
     return <Navigate to="/" replace />;
   }
+};
+
+const NotLoggedInRoutes = ({ children }) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    return <Navigate to="/ " replace />;
+  }
+  return children;
 };
 
 function App() {
@@ -41,16 +54,32 @@ function App() {
           <Route path="/" element={<Accueil />} />
           <Route path="/services" element={<Services />} />
           <Route path="/products/:category?" element={<ProductPage />} />
-          <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/admin-create-user" element={<AdminCreateUserPage />} />
-          <Route path="/register" element={<Register />} />
+
+          {/* not logged in routes */}
+          <Route
+            path="/login"
+            element={
+              <NotLoggedInRoutes>
+                <Login />
+              </NotLoggedInRoutes>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <NotLoggedInRoutes>
+                <Register />
+              </NotLoggedInRoutes>
+            }
+          />
 
           {/* Dashboard routes */}
           <Route
             path="/admin-dashboard/*"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminDashboard />
               </ProtectedRoute>
             }
@@ -58,16 +87,15 @@ function App() {
           <Route
             path="/client-dashboard/*"
             element={
-              <ProtectedRoute allowedRoles={['client']}>
+              <ProtectedRoute allowedRoles={["client"]}>
                 <ClientDashboard />
               </ProtectedRoute>
-              
             }
           />
           <Route
             path="/fournisseur-dashboard/*"
             element={
-              <ProtectedRoute allowedRoles={['fournisseur']}>
+              <ProtectedRoute allowedRoles={["fournisseur"]}>
                 <FournisseurDashboard />
               </ProtectedRoute>
             }

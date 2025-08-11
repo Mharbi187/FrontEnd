@@ -1,61 +1,69 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { FaHome, FaSearch, FaShoppingCart, FaBoxOpen, FaTruck, FaUser, FaSignOutAlt } from 'react-icons/fa';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
-import 'chart.js/auto';
-import { jwtDecode } from 'jwt-decode';
+import React from "react";
+import { Link } from "react-router-dom";
+import {
+  FaHome,
+  FaSearch,
+  FaShoppingCart,
+  FaBoxOpen,
+  FaTruck,
+  FaUser,
+  FaSignOutAlt,
+} from "react-icons/fa";
+import { Line, Bar, Doughnut } from "react-chartjs-2";
+import "chart.js/auto";
+import { jwtDecode } from "jwt-decode";
 
 export default function ClientDashboard() {
   // Get token from localStorage and decode it
-  const token = localStorage.getItem('token');
-  let username = 'Client'; // Default value
-  
+  const token = localStorage.getItem("token");
+  let username = "Client"; // Default value
+
   if (token) {
     try {
       const decoded = jwtDecode(token);
-      username = (decoded.name || 'Client').toUpperCase(); // Use 'name' from token which contains prenom
+      username = (decoded.name || "Client").toUpperCase(); // Use 'name' from token which contains prenom
     } catch (error) {
-      console.error('Error decoding token:', error);
+      console.error("Error decoding token:", error);
     }
   }
 
   // Handle logout
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    window.location.href = '/login';
+    localStorage.removeItem("token");
+    window.location.href = "/login";
   };
 
   // Example chart data for order history
   const orderHistoryData = {
-    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+    labels: ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin"],
     datasets: [
       {
-        label: 'Mes Commandes',
+        label: "Mes Commandes",
         data: [2, 3, 5, 1, 4, 2],
-        borderColor: '#4CAF50',
-        backgroundColor: 'rgba(76, 175, 80, 0.2)',
+        borderColor: "#4CAF50",
+        backgroundColor: "rgba(76, 175, 80, 0.2)",
         fill: true,
       },
     ],
   };
 
   const productCategoriesData = {
-    labels: ['Électronique', 'Vêtements', 'Alimentation', 'Maison'],
+    labels: ["Électronique", "Vêtements", "Alimentation", "Maison"],
     datasets: [
       {
-        label: 'Achats par Catégorie',
+        label: "Achats par Catégorie",
         data: [4, 6, 3, 2],
-        backgroundColor: ['#4CAF50', '#FFC107', '#2196F3', '#F44336'],
+        backgroundColor: ["#4CAF50", "#FFC107", "#2196F3", "#F44336"],
       },
     ],
   };
 
   const orderStatusData = {
-    labels: ['Livrées', 'En cours', 'Annulées'],
+    labels: ["Livrées", "En cours", "Annulées"],
     datasets: [
       {
         data: [10, 3, 1],
-        backgroundColor: ['#4CAF50', '#FFC107', '#F44336'],
+        backgroundColor: ["#4CAF50", "#FFC107", "#F44336"],
       },
     ],
   };
@@ -72,23 +80,38 @@ export default function ClientDashboard() {
           <Link to="/" className="flex items-center gap-3 hover:text-green-400">
             <FaHome /> Acceuil
           </Link>
-          <Link to="/products" className="flex items-center gap-3 hover:text-green-400">
+          <Link
+            to="/products"
+            className="flex items-center gap-3 hover:text-green-400"
+          >
             <FaSearch /> Rechercher produits
           </Link>
-          <Link to="/cart" className="flex items-center gap-3 hover:text-green-400">
+          <Link
+            to="/cart"
+            className="flex items-center gap-3 hover:text-green-400"
+          >
             <FaShoppingCart /> Mon panier
           </Link>
-          <Link to="/orders" className="flex items-center gap-3 hover:text-green-400">
+          <Link
+            to="/orders"
+            className="flex items-center gap-3 hover:text-green-400"
+          >
             <FaBoxOpen /> Mes commandes
           </Link>
-          <Link to="/deliveries" className="flex items-center gap-3 hover:text-green-400">
+          <Link
+            to="/deliveries"
+            className="flex items-center gap-3 hover:text-green-400"
+          >
             <FaTruck /> Suivi livraison
           </Link>
-          <Link to="/profile" className="flex items-center gap-3 hover:text-green-400">
+          <Link
+            to="/profile"
+            className="flex items-center gap-3 hover:text-green-400"
+          >
             <FaUser /> Mon profil
           </Link>
         </nav>
-        <button 
+        <button
           onClick={handleLogout}
           className="p-4 flex items-center gap-3 bg-gray-800 hover:bg-red-600 transition"
         >
@@ -134,26 +157,35 @@ export default function ClientDashboard() {
               <li className="flex justify-between items-center p-2 hover:bg-gray-50">
                 <div>
                   <span className="font-medium">#CMD-78945</span>
-                  <span className="block text-xs text-gray-500">2 produits | Total: 450 TND</span>
+                  <span className="block text-xs text-gray-500">
+                    2 produits | Total: 450 TND
+                  </span>
                 </div>
                 <span className="text-green-500 font-bold">Livrée</span>
               </li>
               <li className="flex justify-between items-center p-2 hover:bg-gray-50">
                 <div>
                   <span className="font-medium">#CMD-78946</span>
-                  <span className="block text-xs text-gray-500">1 produit | Total: 199 TND</span>
+                  <span className="block text-xs text-gray-500">
+                    1 produit | Total: 199 TND
+                  </span>
                 </div>
                 <span className="text-yellow-500 font-bold">En cours</span>
               </li>
               <li className="flex justify-between items-center p-2 hover:bg-gray-50">
                 <div>
                   <span className="font-medium">#CMD-78947</span>
-                  <span className="block text-xs text-gray-500">3 produits | Total: 620 TND</span>
+                  <span className="block text-xs text-gray-500">
+                    3 produits | Total: 620 TND
+                  </span>
                 </div>
                 <span className="text-blue-500 font-bold">Expédiée</span>
               </li>
             </ul>
-            <Link to="/orders" className="text-green-500 text-sm mt-2 inline-block hover:underline">
+            <Link
+              to="/orders"
+              className="text-green-500 text-sm mt-2 inline-block hover:underline"
+            >
               Voir toutes mes commandes →
             </Link>
           </div>
@@ -188,7 +220,10 @@ export default function ClientDashboard() {
                 </div>
               </li>
             </ul>
-            <Link to="/deliveries" className="text-green-500 text-sm mt-2 inline-block hover:underline">
+            <Link
+              to="/deliveries"
+              className="text-green-500 text-sm mt-2 inline-block hover:underline"
+            >
               Voir tous les suivis →
             </Link>
           </div>
@@ -196,4 +231,4 @@ export default function ClientDashboard() {
       </main>
     </div>
   );
-};
+}

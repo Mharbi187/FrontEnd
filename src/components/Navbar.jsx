@@ -1,38 +1,38 @@
-import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
-import { FaSignOutAlt } from 'react-icons/fa';
+import React from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import { FaSignOutAlt } from "react-icons/fa";
 
 const Navbar = () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   let isLoggedIn = false;
-  let userRole = '';
-  let userName = '';
+  let userRole = "";
+  let userName = "";
 
   try {
     if (token) {
       const decoded = jwtDecode(token);
       isLoggedIn = true;
-      userRole = decoded.role || '';
-      userName = decoded.prenom || '';
+      userRole = decoded.role || "";
+      userName = decoded.name || "";
     }
   } catch (error) {
-    console.error('Error decoding token:', error);
+    console.error("Error decoding token:", error);
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
   // Hide navbar only for dashboard pages
   if (
-    location.pathname.startsWith('/admin-dashboard') ||
-    location.pathname.startsWith('/client-dashboard') ||
-    location.pathname.startsWith('/fournisseur-dashboard')
+    location.pathname.startsWith("/admin-dashboard") ||
+    location.pathname.startsWith("/client-dashboard") ||
+    location.pathname.startsWith("/fournisseur-dashboard")
   ) {
     return null;
   }
@@ -50,20 +50,35 @@ const Navbar = () => {
             </div>
 
             <div className="hidden md:flex items-center space-x-4">
-              <Link to="/" className="text-white hover:bg-blue-700 px-3 py-2 rounded-md">
+              <Link
+                to="/"
+                className="text-white hover:bg-blue-700 px-3 py-2 rounded-md"
+              >
                 Accueil
               </Link>
-              <Link to="/services" className="text-white hover:bg-blue-700 px-3 py-2 rounded-md">
+              <Link
+                to="/services"
+                className="text-white hover:bg-blue-700 px-3 py-2 rounded-md"
+              >
                 Services
               </Link>
-              <Link to="/products" className="text-white hover:bg-blue-700 px-3 py-2 rounded-md">
+              <Link
+                to="/products"
+                className="text-white hover:bg-blue-700 px-3 py-2 rounded-md"
+              >
                 Produits
               </Link>
               <div className="flex space-x-2 ml-4">
-                <Link to="/login" className="text-blue-600 bg-white hover:bg-gray-100 px-4 py-2 rounded-md">
+                <Link
+                  to="/login"
+                  className="text-blue-600 bg-white hover:bg-gray-100 px-4 py-2 rounded-md"
+                >
                   Se Connecter
                 </Link>
-                <Link to="/register" className="text-white bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded-md shadow-sm">
+                <Link
+                  to="/register"
+                  className="text-white bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded-md shadow-sm"
+                >
                   S'inscrire
                 </Link>
               </div>
@@ -80,11 +95,13 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0 flex items-center">
-            <span className="text-white text-xl font-bold">Bonjour, {userName}</span>
+            <span className="text-white text-xl font-bold">
+              Bonjour, {userName}
+            </span>
           </div>
-          
+
           <div className="flex items-center space-x-4">
-            <button 
+            <button
               onClick={handleLogout}
               className="flex items-center gap-2 text-white hover:bg-blue-700 px-4 py-2 rounded-md"
             >
