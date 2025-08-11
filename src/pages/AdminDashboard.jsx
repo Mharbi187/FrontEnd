@@ -19,6 +19,7 @@ import {
   FiCheckCircle,
   FiCheck,
 } from "react-icons/fi";
+import { FaUser } from "react-icons/fa";
 import { motion } from "framer-motion";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -411,19 +412,29 @@ export default function AdminDashboard() {
   }
 
   return (
-    
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <div className="flex justify-end items-center gap-4">
-            <button onClick={handleLogout} className="bg-red-500 text-white px-5 py-3 rounded-lg hover:bg-red-600 transition">
-              Déconnexion
-            </button>
-          </div>
+    <div className="min-h-screen">
+      {/* Top bar */}
+      <div className="flex justify-between items-center bg-white p-4 shadow-md">
+        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+
+        <div className="flex items-center space-x-3">
+          {/* Profile shortcut */}
+          <button
+            onClick={() => navigate("/profile")}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            <FaUser className="mr-2" /> Profile
+          </button>
+
+          {/* Logout button */}
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white px-5 py-3 rounded-lg hover:bg-red-600 transition"
+          >
+            Déconnexion
+          </button>
         </div>
-      </header>
+      </div>
 
       {/* Main */}
       
@@ -467,7 +478,7 @@ export default function AdminDashboard() {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">Users Management</h2>
                 <div className="flex items-center space-x-2">
-                  <button onClick={() => navigate("/admin/users/add")} className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                  <button onClick={() => navigate('/admin-create-user')} className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                     <FiUserPlus className="mr-2" /> Add User
                   </button>
                   <button onClick={fetchUsers} className="px-3 py-2 border rounded-md text-sm">Refresh</button>
@@ -790,6 +801,7 @@ export default function AdminDashboard() {
             </div>
           )}
         </motion.div>
+        
       </main>
     </div>
   );

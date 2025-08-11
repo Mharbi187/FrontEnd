@@ -11,6 +11,7 @@ import FournisseurDashboard from './pages/FournisseurDashboard';
 import ProductPage from './pages/Produits';
 import { jwtDecode } from 'jwt-decode';
 import ProfilePage from './pages/ProfilePage';
+import AdminCreateUserPage from './pages/AdminCreateUserPage';
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const token = localStorage.getItem('token');
@@ -42,6 +43,7 @@ function App() {
           <Route path="/products/:category?" element={<ProductPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/admin-create-user" element={<AdminCreateUserPage />} />
           <Route path="/register" element={<Register />} />
 
           {/* Dashboard routes */}
