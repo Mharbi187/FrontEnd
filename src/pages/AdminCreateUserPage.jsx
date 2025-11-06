@@ -71,7 +71,7 @@ export default function AdminCreateUserPage() {
       const token = localStorage.getItem('token');
       const payload = {
         ...user,
-        motdepasse: password
+        mdp: password
       };
 
       await api.post('/users', payload, {
@@ -89,14 +89,19 @@ export default function AdminCreateUserPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Create New User</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-8">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-4xl font-bold gradient-text mb-2">Create New User</h1>
+              <p className="text-gray-600">Ajouter un nouvel utilisateur au système</p>
+            </div>
         <button
           onClick={() => navigate('/admin-dashboard')}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg transform hover:scale-105"
         >
-          <FaArrowLeft /> Back to Users
+          <FaArrowLeft className="mr-2" /> Back to Dashboard
         </button>
       </div>
 
@@ -112,7 +117,7 @@ export default function AdminCreateUserPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium mb-1">Last Name (Nom)*</label>
@@ -121,7 +126,7 @@ export default function AdminCreateUserPage() {
               name="nom"
               value={user.nom}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
               required
             />
           </div>
@@ -132,7 +137,7 @@ export default function AdminCreateUserPage() {
               name="prenom"
               value={user.prenom}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
               required
             />
           </div>
@@ -143,7 +148,7 @@ export default function AdminCreateUserPage() {
               name="email"
               value={user.email}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
               required
             />
           </div>
@@ -154,7 +159,7 @@ export default function AdminCreateUserPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
               required
               minLength={8}
             />
@@ -167,7 +172,7 @@ export default function AdminCreateUserPage() {
               name="role"
               value={user.role}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
               required
             >
               <option value="client">Client</option>
@@ -186,7 +191,7 @@ export default function AdminCreateUserPage() {
               name="adresse.rue"
               value={user.adresse.rue}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
             />
           </div>
           <div>
@@ -196,7 +201,7 @@ export default function AdminCreateUserPage() {
               name="adresse.ville"
               value={user.adresse.ville}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
             />
           </div>
           <div>
@@ -206,7 +211,7 @@ export default function AdminCreateUserPage() {
               name="adresse.codePostal"
               value={user.adresse.codePostal}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
             />
           </div>
           <div>
@@ -216,7 +221,7 @@ export default function AdminCreateUserPage() {
               name="adresse.pays"
               value={user.adresse.pays}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
             />
           </div>
         </div>
@@ -225,12 +230,14 @@ export default function AdminCreateUserPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 font-semibold shadow-lg transition-all transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             <FaSave /> {loading ? 'Creating...' : 'Create User'}
           </button>
         </div>
       </form>
+        </div>
+      </div>
     </div>
   );
 }

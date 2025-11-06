@@ -17,7 +17,7 @@ const Navbar = () => {
       const decoded = jwtDecode(token);
       isLoggedIn = true;
       userRole = decoded.role || '';
-      userName = decoded.prenom || '';
+      userName = decoded.name || '';
     }
   } catch (error) {
     console.error('Error decoding token:', error);

@@ -15,7 +15,7 @@ const ProductPage = () => {
 
   // Enhanced API client with error handling
   const api = axios.create({
-    baseURL: '/api',
+    baseURL: 'http://localhost:5000/api',
     timeout: 10000,
     headers: {
       'Cache-Control': 'no-cache',
@@ -27,6 +27,7 @@ const ProductPage = () => {
   const fetchData = async (url, validator) => {
     try {
       const response = await api.get(url);
+      console.log('API Response:', response.data);
       
       if (!response.data?.success) {
         throw new Error('API request failed');
@@ -71,6 +72,7 @@ const ProductPage = () => {
         `${url}?t=${Date.now()}`,
         (data) => Array.isArray(data)
       );
+      console.log('Fetched Products:', data);
       
       setProducts(data);
     } catch (err) {

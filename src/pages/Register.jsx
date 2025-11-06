@@ -116,25 +116,34 @@ export default function Register() {
     );
   }
 
-  // Original JSX for the registration form (unchanged)
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Créer un compte
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Déjà membre?{' '}
-          <Link 
-            to="/login" 
-            className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
-          >
-            Se connecter
-          </Link>
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
       </div>
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-lg sm:rounded-xl sm:px-10 border border-gray-100">
+      
+      <div className="sm:mx-auto sm:w-full sm:max-w-2xl relative z-10">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">LIVRINI</h1>
+          <h2 className="text-2xl font-semibold text-white/90">
+            Créer un compte
+          </h2>
+          <p className="mt-2 text-sm text-white/80">
+            Déjà membre?{' '}
+            <Link 
+              to="/login" 
+              className="font-medium text-white hover:text-blue-200 transition-colors underline"
+            >
+              Se connecter
+            </Link>
+          </p>
+        </div>
+      </div>
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl relative z-10">
+        <div className="glass bg-white/95 backdrop-blur-xl py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-white/20">
           {errors.general && (
             <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded">
               <p className="text-sm text-red-600">{errors.general}</p>
@@ -153,9 +162,9 @@ export default function Register() {
                   required
                   value={formData.prenom}
                   onChange={handleChange}
-                  className={`mt-1 block w-full border ${
-                    errors.prenom ? 'border-red-300 focus:border-red-300' : 'border-gray-300 focus:border-blue-500'
-                  } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 transition-colors`}
+                  className={`mt-1 block w-full border-2 ${
+                    errors.prenom ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
+                  } rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-4 transition-all bg-white/50 backdrop-blur-sm`}
                   placeholder="Votre prénom"
                 />
                 {errors.prenom && (
@@ -173,9 +182,9 @@ export default function Register() {
                   required
                   value={formData.nom}
                   onChange={handleChange}
-                  className={`mt-1 block w-full border ${
-                    errors.nom ? 'border-red-300 focus:border-red-300' : 'border-gray-300 focus:border-blue-500'
-                  } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 transition-colors`}
+                  className={`mt-1 block w-full border-2 ${
+                    errors.nom ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
+                  } rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-4 transition-all bg-white/50 backdrop-blur-sm`}
                   placeholder="Votre nom"
                 />
                 {errors.nom && (
@@ -195,9 +204,9 @@ export default function Register() {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className={`mt-1 block w-full border ${
-                  errors.email ? 'border-red-300 focus:border-red-300' : 'border-gray-300 focus:border-blue-500'
-                } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 transition-colors`}
+                  className={`mt-1 block w-full border-2 ${
+                    errors.email ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
+                  } rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-4 transition-all bg-white/50 backdrop-blur-sm`}
                 placeholder="exemple@email.com"
               />
               {errors.email && (
@@ -215,9 +224,9 @@ export default function Register() {
                 required
                 value={formData.adresse}
                 onChange={handleChange}
-                className={`mt-1 block w-full border ${
-                  errors.adresse ? 'border-red-300 focus:border-red-300' : 'border-gray-300 focus:border-blue-500'
-                } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 transition-colors`}
+                  className={`mt-1 block w-full border-2 ${
+                    errors.adresse ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
+                  } rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-4 transition-all bg-white/50 backdrop-blur-sm`}
                 placeholder="Votre adresse complète"
               />
               {errors.adresse && (
@@ -237,9 +246,9 @@ export default function Register() {
                 minLength="6"
                 value={formData.motdepasse}
                 onChange={handleChange}
-                className={`mt-1 block w-full border ${
-                  errors.motdepasse ? 'border-red-300 focus:border-red-300' : 'border-gray-300 focus:border-blue-500'
-                } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 transition-colors`}
+                  className={`mt-1 block w-full border-2 ${
+                    errors.motdepasse ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
+                  } rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-4 transition-all bg-white/50 backdrop-blur-sm`}
                 placeholder="••••••••"
               />
               {errors.motdepasse ? (
@@ -260,9 +269,9 @@ export default function Register() {
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className={`mt-1 block w-full border ${
-                  errors.confirmPassword ? 'border-red-300 focus:border-red-300' : 'border-gray-300 focus:border-blue-500'
-                } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 transition-colors`}
+                  className={`mt-1 block w-full border-2 ${
+                    errors.confirmPassword ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
+                  } rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-4 transition-all bg-white/50 backdrop-blur-sm`}
                 placeholder="••••••••"
               />
               {errors.confirmPassword && (
@@ -273,7 +282,7 @@ export default function Register() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${
+                className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
                   isLoading ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
               >

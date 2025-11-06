@@ -171,6 +171,10 @@ const ProfilePage = () => {
       await api.put('/users/change-password', {
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
 
       setMessage({ text: 'Mot de passe changé avec succès', type: 'success' });
@@ -211,8 +215,13 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6">Mon Profil</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-8">
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold gradient-text mb-2">Mon Profil</h1>
+            <p className="text-gray-600">Gérez vos informations personnelles et votre sécurité</p>
+          </div>
       
       {message.text && (
         <div className={`mb-4 p-3 rounded ${
@@ -222,15 +231,23 @@ const ProfilePage = () => {
         </div>
       )}
 
-      <div className="flex border-b mb-6">
+      <div className="flex border-b-2 border-gray-200 mb-8">
         <button
-          className={`py-2 px-4 ${activeTab === 'profile' ? 'border-b-2 border-green-500 font-medium' : 'text-gray-500'}`}
+          className={`py-3 px-6 font-semibold transition-all relative ${
+            activeTab === 'profile' 
+              ? 'text-blue-600 border-b-2 border-blue-600' 
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
           onClick={() => setActiveTab('profile')}
         >
           Informations personnelles
         </button>
         <button
-          className={`py-2 px-4 ${activeTab === 'password' ? 'border-b-2 border-green-500 font-medium' : 'text-gray-500'}`}
+          className={`py-3 px-6 font-semibold transition-all relative ${
+            activeTab === 'password' 
+              ? 'text-blue-600 border-b-2 border-blue-600' 
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
           onClick={() => setActiveTab('password')}
         >
           Mot de passe
@@ -249,7 +266,7 @@ const ProfilePage = () => {
                     name="nom"
                     value={user.nom || ''}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
                     required
                   />
                 </div>
@@ -260,7 +277,7 @@ const ProfilePage = () => {
                     name="prenom"
                     value={user.prenom || ''}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
                     required
                   />
                 </div>
@@ -271,7 +288,7 @@ const ProfilePage = () => {
                     name="email"
                     value={user.email || ''}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
                     required
                     disabled
                   />
@@ -287,7 +304,7 @@ const ProfilePage = () => {
                     name="adresse.rue"
                     value={user.adresse?.rue || ''}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
                   />
                 </div>
                 <div>
@@ -297,7 +314,7 @@ const ProfilePage = () => {
                     name="adresse.ville"
                     value={user.adresse?.ville || ''}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
                   />
                 </div>
                 <div>
@@ -307,7 +324,7 @@ const ProfilePage = () => {
                     name="adresse.codePostal"
                     value={user.adresse?.codePostal || ''}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
                   />
                 </div>
                 <div>
@@ -317,7 +334,7 @@ const ProfilePage = () => {
                     name="adresse.pays"
                     value={user.adresse?.pays || ''}
                     onChange={handleInputChange}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 transition-all bg-white/50 backdrop-blur-sm"
                   />
                 </div>
               </div>
@@ -326,13 +343,13 @@ const ProfilePage = () => {
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  className="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 font-semibold transition-all transform hover:scale-105"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 font-semibold shadow-lg transition-all transform hover:scale-105"
                 >
                   Enregistrer
                 </button>
@@ -378,7 +395,7 @@ const ProfilePage = () => {
               <div className="flex justify-end mt-6">
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 font-semibold shadow-lg transition-all transform hover:scale-105"
                 >
                   Modifier le profil
                 </button>
@@ -428,13 +445,15 @@ const ProfilePage = () => {
           <div className="flex justify-end mt-6">
             <button
               type="submit"
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 font-semibold shadow-lg transition-all transform hover:scale-105"
             >
               Changer le mot de passe
             </button>
           </div>
         </form>
       )}
+        </div>
+      </div>
     </div>
   );
 };

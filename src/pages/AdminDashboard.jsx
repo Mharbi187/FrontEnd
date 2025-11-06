@@ -140,7 +140,7 @@ export default function AdminDashboard() {
     setLoading(true);
     setError(null);
     try {
-      // backend router exposes GET /users (admin only, per your router snippet)
+      // backend router exposes GET /users (admin only)
       const res = await api.get("/users", { headers: getAuthHeaders() });
       const extracted = extractData(res);
       // if API returns an object with metadata, try to use .data or .users, or array
@@ -181,8 +181,8 @@ export default function AdminDashboard() {
     setLoading(true);
     setError(null);
     try {
-      // Adjust this endpoint to your categories router if different
-      const res = await api.get("/admin/categories", { headers: getAuthHeaders() });
+      // Use existing backend categories endpoint
+      const res = await api.get("/categories", { headers: getAuthHeaders() });
       const data = extractData(res);
       // expect array or { data: [] }
       const arr = Array.isArray(data) ? data : data?.data ?? data?.categories ?? [];
@@ -204,7 +204,8 @@ export default function AdminDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get("/admin/orders", { headers: getAuthHeaders() });
+      // Use existing backend orders endpoint
+      const res = await api.get("/commandes", { headers: getAuthHeaders() });
       const data = extractData(res);
       const arr = Array.isArray(data) ? data : data?.data ?? data?.orders ?? [];
       setOrders(arr || []);
@@ -224,7 +225,8 @@ export default function AdminDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get("/admin/stock-alerts", { headers: getAuthHeaders() });
+      // Use existing backend stock alerts endpoint
+      const res = await api.get("/alertes-stock", { headers: getAuthHeaders() });
       const data = extractData(res);
       const arr = Array.isArray(data) ? data : data?.data ?? data?.alerts ?? [];
       setStockAlerts(arr || []);
@@ -281,7 +283,7 @@ export default function AdminDashboard() {
   const handleDeleteCategory = async (id) => {
     if (!window.confirm("Delete this category?")) return;
     try {
-      await api.delete(`/admin/categories/${id}`, { headers: getAuthHeaders() });
+      await api.delete(`/categories/${id}`, { headers: getAuthHeaders() });
       setCategories((prev) => prev.filter((c) => (c.id ?? c._id) !== id));
     } catch (err) {
       console.error("delete category error:", err);
@@ -291,7 +293,7 @@ export default function AdminDashboard() {
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
-      const res = await api.patch(`/admin/orders/${orderId}`, { status: newStatus }, { headers: getAuthHeaders() });
+      const res = await api.put(`/commandes/${orderId}`, { status: newStatus }, { headers: getAuthHeaders() });
       // optimistic update (or use returned order)
       setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)));
       return res.data;
@@ -303,7 +305,7 @@ export default function AdminDashboard() {
 
   const handleResolveAlert = async (id) => {
     try {
-      await api.post(`/admin/stock-alerts/${id}/resolve`, {}, { headers: getAuthHeaders() });
+      await api.put(`/alertes-stock/${id}/resoudre`, {}, { headers: getAuthHeaders() });
       setStockAlerts((prev) => prev.filter((a) => a.id !== id));
     } catch (err) {
       console.error("resolve alert error:", err);
@@ -314,8 +316,12 @@ export default function AdminDashboard() {
   const handleResolveAllAlerts = async () => {
     if (!window.confirm("Resolve all alerts?")) return;
     try {
-      await api.post("/admin/stock-alerts/resolve-all", {}, { headers: getAuthHeaders() });
-      setStockAlerts([]);
+      // Batch resolve by iterating existing alerts
+      await Promise.all(
+        stockAlerts.map((a) => api.put(`/alertes-stock/${a.id ?? a._id}/resoudre`, {}, { headers: getAuthHeaders() }).catch(() => null))
+      );
+      // Refresh list after batch
+      fetchStockAlerts();
     } catch (err) {
       console.error("resolve all error:", err);
       alert("Failed to resolve all alerts");
@@ -375,17 +381,17 @@ export default function AdminDashboard() {
       let res;
       switch (type) {
         case "sales":
-          res = await api.get("/admin/reports/sales", { headers: getAuthHeaders() });
+          res = await api.get("/rapports", { headers: getAuthHeaders() });
           break;
         case "inventory":
-          res = await api.get("/admin/reports/inventory", { headers: getAuthHeaders() });
+          res = await api.get("/rapports", { headers: getAuthHeaders() });
           break;
         case "users":
           // reuse GET /users and convert to a report-friendly shape
           res = await api.get("/users", { headers: getAuthHeaders() });
           break;
         case "products":
-          res = await api.get("/admin/reports/products", { headers: getAuthHeaders() });
+          res = await api.get("/rapports", { headers: getAuthHeaders() });
           break;
         default:
           res = { data: null };
@@ -412,16 +418,16 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100">
       {/* Top bar */}
-      <div className="flex justify-between items-center bg-white p-4 shadow-md">
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+      <div className="flex justify-between items-center bg-white/80 backdrop-blur-xl p-6 shadow-lg border-b border-gray-200">
+        <h1 className="text-3xl font-bold gradient-text">Admin Dashboard</h1>
 
         <div className="flex items-center space-x-3">
           {/* Profile shortcut */}
           <button
             onClick={() => navigate("/profile")}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg transform hover:scale-105"
           >
             <FaUser className="mr-2" /> Profile
           </button>
@@ -429,7 +435,7 @@ export default function AdminDashboard() {
           {/* Logout button */}
           <button
             onClick={handleLogout}
-            className="bg-red-500 text-white px-5 py-3 rounded-lg hover:bg-red-600 transition"
+            className="bg-gradient-to-r from-red-500 to-red-600 text-white px-5 py-3 rounded-xl hover:from-red-600 hover:to-red-700 transition-all shadow-lg transform hover:scale-105"
           >
             Déconnexion
           </button>
@@ -441,8 +447,8 @@ export default function AdminDashboard() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Navigation Tabs */}
-        <div className="border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
+        <div className="border-b-2 border-gray-200 bg-white/50 backdrop-blur-sm rounded-t-xl">
+          <nav className="-mb-px flex space-x-2 overflow-x-auto">
             {[
               { id: "users", name: "Users Management", icon: <FiUsers className="mr-2" /> },
               { id: "categories", name: "Categories", icon: <FiList className="mr-2" /> },
@@ -454,8 +460,10 @@ export default function AdminDashboard() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`${
-                  activeTab === tab.id ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center`}
+                  activeTab === tab.id 
+                    ? "border-blue-600 text-blue-600 bg-blue-50" 
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                } whitespace-nowrap py-4 px-4 border-b-2 font-semibold text-sm flex items-center transition-all rounded-t-lg`}
               >
                 {tab.icon}
                 {tab.name}
@@ -470,7 +478,7 @@ export default function AdminDashboard() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
-          className="bg-white shadow rounded-lg p-6 mt-6"
+          className="bg-white/80 backdrop-blur-xl shadow-xl rounded-b-xl p-6 border border-white/20"
         >
           {/* USERS */}
           {activeTab === "users" && (
@@ -478,24 +486,24 @@ export default function AdminDashboard() {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">Users Management</h2>
                 <div className="flex items-center space-x-2">
-                  <button onClick={() => navigate('/admin-create-user')} className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                  <button onClick={() => navigate('/admin-create-user')} className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 shadow-lg transition-all transform hover:scale-105">
                     <FiUserPlus className="mr-2" /> Add User
                   </button>
-                  <button onClick={fetchUsers} className="px-3 py-2 border rounded-md text-sm">Refresh</button>
+                  <button onClick={fetchUsers} className="px-4 py-2 border-2 border-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all">Refresh</button>
                 </div>
               </div>
 
               {loading && <p className="text-sm text-gray-500">Loading...</p>}
               {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
 
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-xl border border-gray-200">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Role</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -515,19 +523,19 @@ export default function AdminDashboard() {
                           ? "bg-yellow-100 text-yellow-800"
                           : "bg-green-100 text-green-800";
                       return (
-                        <tr key={uid} className="hover:bg-gray-50">
-                          <td className="px-6 py-4">{user.name}</td>
-                          <td className="px-6 py-4">{user.email}</td>
+                        <tr key={uid} className="hover:bg-blue-50/50 transition-colors">
+                          <td className="px-6 py-4 font-medium text-gray-900">{user.name}</td>
+                          <td className="px-6 py-4 text-gray-600">{user.email}</td>
                           <td className="px-6 py-4">
-                            <span className={`px-2 inline-flex text-xs font-semibold rounded-full ${badgeClass}`}>
+                            <span className={`px-3 py-1 inline-flex text-xs font-bold rounded-full ${badgeClass}`}>
                               {role}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm font-medium">
-                            <button onClick={() => navigate(`/admin/users/${uid}/edit`)} className="text-blue-600 hover:text-blue-900 mr-4">
+                            <button onClick={() => navigate(`/admin/users/${uid}/edit`)} className="text-blue-600 hover:text-blue-800 mr-4 font-semibold transition-colors">
                               <FiEdit className="inline mr-1" /> Edit
                             </button>
-                            <button onClick={() => handleDeleteUser(uid)} className="text-red-600 hover:text-red-900">
+                            <button onClick={() => handleDeleteUser(uid)} className="text-red-600 hover:text-red-800 font-semibold transition-colors">
                               <FiTrash2 className="inline mr-1" /> Delete
                             </button>
                           </td>

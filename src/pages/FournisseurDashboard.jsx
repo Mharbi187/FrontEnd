@@ -20,19 +20,40 @@ export default function FournisseurDashboard() {
     category: ''
   });
   const [userName, setUserName] = useState('');
+  const [isVerifying, setIsVerifying] = useState(true);
 
-  // Get user name from token on component mount
+  // Verify fournisseur role and get user name
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const decoded = jwtDecode(token); 
-        setUserName(decoded.prenom || 'Fournisseur'); // Fallback to 'Fournisseur' if name not available
-      } catch (error) {
-        console.error('Error decoding token:', error);
+    const verifyFournisseur = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
       }
-    }
-  }, []);
+
+      try {
+        const decoded = jwtDecode(token);
+        // Check expiry
+        if (decoded.exp && decoded.exp < Date.now() / 1000) {
+          throw new Error('Token expired');
+        }
+        // Check role
+        if (decoded.role && decoded.role.toLowerCase() !== 'fournisseur') {
+          navigate('/');
+          return;
+        }
+        // Set user name from token (uses 'name' field from login)
+        setUserName(decoded.name || decoded.prenom || 'Fournisseur');
+        setIsVerifying(false);
+      } catch (err) {
+        console.error('Fournisseur verification failed:', err);
+        localStorage.removeItem('token');
+        navigate('/login');
+      }
+    };
+
+    verifyFournisseur();
+  }, [navigate]);
 
   // Supplier-specific chart data
   const stockData = {
@@ -86,12 +107,26 @@ export default function FournisseurDashboard() {
     navigate('/login');
   };
 
-  const handleAddProduct = () => {
-    // Implement product addition logic
-    console.log('Adding product:', newProduct);
-    setShowAddProductModal(false);
-    setNewProduct({ name: '', price: '', stock: '', category: '' });
+  const handleAddProduct = async () => {
+    try {
+      // TODO: Implement API call to create product
+      console.log('Adding product:', newProduct);
+      setShowAddProductModal(false);
+      setNewProduct({ name: '', price: '', stock: '', category: '' });
+      // After successful creation, refresh products list
+    } catch (error) {
+      console.error('Error adding product:', error);
+      alert('Erreur lors de l\'ajout du produit');
+    }
   };
+
+  if (isVerifying) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <motion.div 

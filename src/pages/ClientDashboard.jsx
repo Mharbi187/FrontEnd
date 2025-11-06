@@ -61,36 +61,36 @@ export default function ClientDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-900 text-white flex flex-col">
+      <aside className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col shadow-2xl">
         <div className="p-6 font-bold text-xl flex items-center gap-2 border-b border-gray-700">
-          <div className="bg-green-500 w-8 h-8 rounded-sm"></div>
-          <span>LIVRINI</span>
+          <div className="bg-gradient-to-br from-green-400 to-green-600 w-10 h-10 rounded-lg flex items-center justify-center shadow-lg"></div>
+          <span className="bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">LIVRINI</span>
         </div>
-        <nav className="flex-1 p-4 space-y-4">
-          <Link to="/" className="flex items-center gap-3 hover:text-green-400">
+        <nav className="flex-1 p-4 space-y-2">
+          <Link to="/" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all hover:translate-x-1">
             <FaHome /> Acceuil
           </Link>
-          <Link to="/products" className="flex items-center gap-3 hover:text-green-400">
+          <Link to="/products" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all hover:translate-x-1">
             <FaSearch /> Rechercher produits
           </Link>
-          <Link to="/cart" className="flex items-center gap-3 hover:text-green-400">
+          <Link to="/cart" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all hover:translate-x-1">
             <FaShoppingCart /> Mon panier
           </Link>
-          <Link to="/orders" className="flex items-center gap-3 hover:text-green-400">
+          <Link to="/orders" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all hover:translate-x-1">
             <FaBoxOpen /> Mes commandes
           </Link>
-          <Link to="/deliveries" className="flex items-center gap-3 hover:text-green-400">
+          <Link to="/deliveries" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all hover:translate-x-1">
             <FaTruck /> Suivi livraison
           </Link>
-          <Link to="/profile" className="flex items-center gap-3 hover:text-green-400">
+          <Link to="/profile" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all hover:translate-x-1">
             <FaUser /> Mon profil
           </Link>
         </nav>
         <button 
           onClick={handleLogout}
-          className="p-4 flex items-center gap-3 bg-gray-800 hover:bg-red-600 transition"
+          className="m-4 p-4 flex items-center gap-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-lg transition-all shadow-lg transform hover:scale-105"
         >
           <FaSignOutAlt /> Déconnexion
         </button>
@@ -112,24 +112,24 @@ export default function ClientDashboard() {
 
         {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="font-bold mb-2">Historique de commandes</h3>
+          <div className="bg-white/80 backdrop-blur-xl p-6 rounded-xl shadow-xl border border-white/20 hover:shadow-2xl transition-all">
+            <h3 className="font-bold mb-4 text-gray-800">Historique de commandes</h3>
             <Line data={orderHistoryData} />
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="font-bold mb-2">Statut des commandes</h3>
+          <div className="bg-white/80 backdrop-blur-xl p-6 rounded-xl shadow-xl border border-white/20 hover:shadow-2xl transition-all">
+            <h3 className="font-bold mb-4 text-gray-800">Statut des commandes</h3>
             <Doughnut data={orderStatusData} />
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="font-bold mb-2">Catégories préférées</h3>
+          <div className="bg-white/80 backdrop-blur-xl p-6 rounded-xl shadow-xl border border-white/20 hover:shadow-2xl transition-all">
+            <h3 className="font-bold mb-4 text-gray-800">Catégories préférées</h3>
             <Bar data={productCategoriesData} />
           </div>
         </div>
 
         {/* Stats Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h2 className="font-bold mb-2">Dernières commandes</h2>
+          <div className="bg-white/80 backdrop-blur-xl p-6 rounded-xl shadow-xl border border-white/20 hover:shadow-2xl transition-all">
+            <h2 className="font-bold mb-4 text-xl text-gray-800">Dernières commandes</h2>
             <ul className="space-y-2 text-sm">
               <li className="flex justify-between items-center p-2 hover:bg-gray-50">
                 <div>
@@ -157,8 +157,8 @@ export default function ClientDashboard() {
               Voir toutes mes commandes →
             </Link>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h2 className="font-bold mb-2">Suivi de livraison</h2>
+          <div className="bg-white/80 backdrop-blur-xl p-6 rounded-xl shadow-xl border border-white/20 hover:shadow-2xl transition-all">
+            <h2 className="font-bold mb-4 text-xl text-gray-800">Suivi de livraison</h2>
             <ul className="space-y-3 text-sm">
               <li className="p-2 hover:bg-gray-50">
                 <div className="flex justify-between">
