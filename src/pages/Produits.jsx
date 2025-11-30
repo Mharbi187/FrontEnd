@@ -15,13 +15,24 @@ const ProductPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(category || 'all');
   const [sortOption, setSortOption] = useState('featured');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [priceRange, setPriceRange] = useState([0, 10000]);
   
-  // Infinite scroll state
-  const [displayedCount, setDisplayedCount] = useState(PRODUCTS_PER_PAGE);
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const loaderRef = useRef(null);
+  
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Category icons mapping
   const categoryIcons = {
@@ -33,138 +44,101 @@ const ProductPage = () => {
     'Fitness': '💪'
   };
 
-  // Unified data fetcher with proper validation
-  const fetchData = async (url, validator) => {
-    try {
-      const response = await api.get(url);
-      console.log('API Response:', response.data);
-      
-      if (!response.data?.success) {
-        throw new Error('API request failed');
-      }
-      
-      if (!validator(response.data.data)) {
-        throw new Error('Invalid data format');
-      }
-      
-      return response.data.data;
-    } catch (err) {
-      console.error(`Error fetching ${url}:`, err);
-      throw err;
-    }
-  };
-
   // Fetch categories with validation
   const fetchCategories = async () => {
     try {
-      const data = await fetchData(
-        `/categories?t=${Date.now()}`,
-        (data) => Array.isArray(data)
-      );
-      
-      setCategories([{ _id: 'all', nom: 'Tous les Produits' }, ...data]);
+      const response = await api.get('/categories');
+      if (response.data?.success && Array.isArray(response.data.data)) {
+        setCategories([{ _id: 'all', nom: 'Tous les Produits' }, ...response.data.data]);
+      }
     } catch (err) {
-      setError('Failed to load categories. Please refresh the page.');
+      console.error('Error fetching categories:', err);
     }
   };
 
-  // Fetch products with validation
-  const fetchProducts = async () => {
-    setLoading(true);
+  // Fetch products with pagination from backend
+  const fetchProducts = async (pageNum = 1, append = false) => {
+    if (pageNum === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
     setError(null);
     
     try {
-      // Always fetch all products, filter on frontend for better UX
-      const data = await fetchData(
-        `/produits?t=${Date.now()}`,
-        (data) => Array.isArray(data)
-      );
-      console.log('Fetched Products:', data);
+      // Build query params
+      const params = new URLSearchParams({
+        page: pageNum,
+        limit: PRODUCTS_PER_PAGE,
+        sort: sortOption,
+      });
       
-      setProducts(data);
+      if (selectedCategory !== 'all') {
+        params.append('category', selectedCategory);
+      }
+      
+      if (debouncedSearch) {
+        params.append('search', debouncedSearch);
+      }
+      
+      if (priceRange[0] > 0) {
+        params.append('minPrice', priceRange[0]);
+      }
+      
+      if (priceRange[1] < 10000) {
+        params.append('maxPrice', priceRange[1]);
+      }
+
+      const response = await api.get(`/produits?${params.toString()}`);
+      
+      if (response.data?.success) {
+        if (append) {
+          setProducts(prev => [...prev, ...response.data.data]);
+        } else {
+          setProducts(response.data.data);
+        }
+        setTotalProducts(response.data.total);
+        setHasNextPage(response.data.hasNextPage);
+        setPage(response.data.page);
+      }
     } catch (err) {
       setError(err.message || 'Failed to load products');
-      setProducts([]);
+      if (!append) setProducts([]);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
+
+  // Load more products
+  const loadMoreProducts = useCallback(() => {
+    if (hasNextPage && !loadingMore) {
+      fetchProducts(page + 1, true);
+    }
+  }, [hasNextPage, loadingMore, page, selectedCategory, debouncedSearch, sortOption, priceRange]);
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
+  // Fetch products when filters change
   useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  // Reset displayed count when filters change
-  useEffect(() => {
-    setDisplayedCount(PRODUCTS_PER_PAGE);
-  }, [selectedCategory, searchQuery, sortOption, priceRange]);
-
-  // Memoized filtered and sorted products
-  const processedProducts = React.useMemo(() => {
-    let filtered = selectedCategory === 'all'
-      ? products
-      : products.filter(p => {
-          // Handle both populated and non-populated category
-          const catId = typeof p.categorie === 'object' ? p.categorie?._id : p.categorie;
-          return catId === selectedCategory;
-        });
-
-    // Apply search filter
-    if (searchQuery) {
-      filtered = filtered.filter(p => 
-        p.nom?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.description?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // Apply price filter
-    filtered = filtered.filter(p => 
-      (p.prix || 0) >= priceRange[0] && (p.prix || 0) <= priceRange[1]
-    );
-
-    return [...filtered].sort((a, b) => {
-      switch (sortOption) {
-        case 'price-low': return (a.prix || 0) - (b.prix || 0);
-        case 'price-high': return (b.prix || 0) - (a.prix || 0);
-        case 'newest': 
-          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-        case 'name-az':
-          return (a.nom || '').localeCompare(b.nom || '');
-        case 'name-za':
-          return (b.nom || '').localeCompare(a.nom || '');
-        default: return 0;
-      }
-    });
-  }, [products, selectedCategory, sortOption, searchQuery, priceRange]);
-
-  // Get displayed products (for infinite scroll)
-  const displayedProducts = React.useMemo(() => {
-    return processedProducts.slice(0, displayedCount);
-  }, [processedProducts, displayedCount]);
-
-  const hasMoreProducts = displayedCount < processedProducts.length;
+    setPage(1);
+    fetchProducts(1, false);
+  }, [selectedCategory, debouncedSearch, sortOption, priceRange]);
 
   // Intersection Observer for infinite scroll
   const handleObserver = useCallback((entries) => {
     const target = entries[0];
-    if (target.isIntersecting && hasMoreProducts && !loadingMore) {
-      setLoadingMore(true);
-      // Simulate loading delay for smooth UX
-      setTimeout(() => {
-        setDisplayedCount(prev => Math.min(prev + PRODUCTS_PER_PAGE, processedProducts.length));
-        setLoadingMore(false);
-      }, 300);
+    if (target.isIntersecting && hasNextPage && !loadingMore && !loading) {
+      loadMoreProducts();
     }
-  }, [hasMoreProducts, loadingMore, processedProducts.length]);
+  }, [hasNextPage, loadingMore, loading, loadMoreProducts]);
 
   useEffect(() => {
     const option = {
       root: null,
-      rootMargin: '100px',
+      rootMargin: '200px',
       threshold: 0.1
     };
     const observer = new IntersectionObserver(handleObserver, option);
@@ -329,7 +303,7 @@ const ProductPage = () => {
         <div className="bg-white rounded-2xl shadow-lg p-4 mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4 flex-wrap">
             <span className="text-gray-600 font-medium">
-              {displayedProducts.length} sur {processedProducts.length} produit{processedProducts.length !== 1 ? 's' : ''}
+              {products.length} sur {totalProducts} produit{totalProducts !== 1 ? 's' : ''}
             </span>
             
             {/* View Mode Toggle */}
@@ -375,7 +349,7 @@ const ProductPage = () => {
 
         {/* Product Grid */}
         <AnimatePresence mode="wait">
-          {displayedProducts.length > 0 ? (
+          {products.length > 0 ? (
             <motion.div
               key="products"
               variants={containerVariants}
@@ -387,7 +361,7 @@ const ProductPage = () => {
                 : "flex flex-col gap-4"
               }
             >
-              {displayedProducts.map((product, index) => (
+              {products.map((product, index) => (
                 <motion.div
                   key={product._id}
                   variants={itemVariants}
@@ -407,77 +381,75 @@ const ProductPage = () => {
               ))}
             </motion.div>
           ) : (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              className="text-center py-20"
-            >
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-4xl">🔍</span>
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Aucun produit trouvé</h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                {searchQuery 
-                  ? `Aucun résultat pour "${searchQuery}". Essayez d'autres termes de recherche.`
-                  : 'Aucun produit disponible dans cette catégorie pour le moment.'
-                }
-              </p>
-              <div className="flex gap-4 justify-center flex-wrap">
-                {searchQuery && (
+            !loading && (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center py-20"
+              >
+                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-4xl">🔍</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Aucun produit trouvé</h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  {searchQuery 
+                    ? `Aucun résultat pour "${searchQuery}". Essayez d'autres termes de recherche.`
+                    : 'Aucun produit disponible dans cette catégorie pour le moment.'
+                  }
+                </p>
+                <div className="flex gap-4 justify-center flex-wrap">
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-all"
+                    >
+                      Effacer la recherche
+                    </button>
+                  )}
                   <button
-                    onClick={() => setSearchQuery('')}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-all"
+                    onClick={() => {
+                      setSelectedCategory('all');
+                      setSearchQuery('');
+                    }}
+                    className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300"
                   >
-                    Effacer la recherche
+                    Voir tous les produits
                   </button>
-                )}
-                <button
-                  onClick={() => {
-                    setSelectedCategory('all');
-                    setSearchQuery('');
-                  }}
-                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300"
-                >
-                  Voir tous les produits
-                </button>
-              </div>
-            </motion.div>
+                </div>
+              </motion.div>
+            )
           )}
         </AnimatePresence>
 
         {/* Infinite Scroll Loader */}
-        {hasMoreProducts && (
-          <div ref={loaderRef} className="flex justify-center items-center py-8">
-            {loadingMore ? (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 border-3 border-emerald-200 rounded-full animate-spin border-t-emerald-600"></div>
-                <span className="text-gray-600">Chargement...</span>
-              </div>
-            ) : (
-              <div className="w-8 h-8 opacity-0"></div>
-            )}
-          </div>
-        )}
+        <div ref={loaderRef} className="flex justify-center items-center py-8">
+          {loadingMore && (
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 border-3 border-emerald-200 rounded-full animate-spin border-t-emerald-600"></div>
+              <span className="text-gray-600">Chargement...</span>
+            </div>
+          )}
+        </div>
 
         {/* Load More Button (fallback) */}
-        {hasMoreProducts && !loadingMore && (
+        {hasNextPage && !loadingMore && (
           <div className="flex justify-center mt-4">
             <button
-              onClick={() => setDisplayedCount(prev => Math.min(prev + PRODUCTS_PER_PAGE, processedProducts.length))}
+              onClick={loadMoreProducts}
               className="px-6 py-3 bg-white border-2 border-emerald-500 text-emerald-600 rounded-xl font-medium hover:bg-emerald-50 transition-all duration-300 flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-              Charger plus ({processedProducts.length - displayedCount} restants)
+              Charger plus ({totalProducts - products.length} restants)
             </button>
           </div>
         )}
 
         {/* Scroll to Top Button */}
-        {displayedCount > PRODUCTS_PER_PAGE && (
+        {products.length > PRODUCTS_PER_PAGE && (
           <motion.button
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -491,7 +463,7 @@ const ProductPage = () => {
         )}
 
         {/* Quick Stats */}
-        {processedProducts.length > 0 && (
+        {products.length > 0 && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -499,10 +471,10 @@ const ProductPage = () => {
             className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4"
           >
             {[
-              { icon: '📦', label: 'Produits Disponibles', value: processedProducts.filter(p => p.quantiteStock > 0).length },
-              { icon: '🏷️', label: 'Catégories', value: categories.length - 1 },
-              { icon: '💰', label: 'Prix Min', value: `${Math.min(...processedProducts.map(p => p.prix || 0))} TND` },
-              { icon: '⭐', label: 'Prix Max', value: `${Math.max(...processedProducts.map(p => p.prix || 0))} TND` },
+              { icon: '📦', label: 'Produits Chargés', value: products.length },
+              { icon: '🏷️', label: 'Total Disponible', value: totalProducts },
+              { icon: '💰', label: 'Prix Min', value: products.length ? `${Math.min(...products.map(p => p.prix || 0))} TND` : '0 TND' },
+              { icon: '⭐', label: 'Prix Max', value: products.length ? `${Math.max(...products.map(p => p.prix || 0))} TND` : '0 TND' },
             ].map((stat, i) => (
               <div key={i} className="bg-white rounded-xl p-4 text-center shadow-md border border-gray-100">
                 <span className="text-2xl mb-2 block">{stat.icon}</span>
