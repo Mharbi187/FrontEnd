@@ -411,23 +411,26 @@ export default function AdminDashboard() {
   // ====== RENDER ======
   if (isVerifying) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Vérification des droits admin...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
       {/* Top bar */}
       <div className="flex justify-between items-center bg-white/80 backdrop-blur-xl p-6 shadow-lg border-b border-gray-200">
-        <h1 className="text-3xl font-bold gradient-text">Admin Dashboard</h1>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Admin Dashboard</h1>
 
         <div className="flex items-center space-x-3">
           {/* Profile shortcut */}
           <button
             onClick={() => navigate("/profile")}
-            className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg transform hover:scale-105"
+            className="flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 transition-all shadow-lg transform hover:scale-105"
           >
             <FaUser className="mr-2" /> Profile
           </button>
@@ -461,7 +464,7 @@ export default function AdminDashboard() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`${
                   activeTab === tab.id 
-                    ? "border-blue-600 text-blue-600 bg-blue-50" 
+                    ? "border-emerald-600 text-emerald-600 bg-emerald-50" 
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                 } whitespace-nowrap py-4 px-4 border-b-2 font-semibold text-sm flex items-center transition-all rounded-t-lg`}
               >
@@ -486,7 +489,7 @@ export default function AdminDashboard() {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">Users Management</h2>
                 <div className="flex items-center space-x-2">
-                  <button onClick={() => navigate('/admin-create-user')} className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 shadow-lg transition-all transform hover:scale-105">
+                  <button onClick={() => navigate('/admin-create-user')} className="flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 shadow-lg transition-all transform hover:scale-105">
                     <FiUserPlus className="mr-2" /> Add User
                   </button>
                   <button onClick={fetchUsers} className="px-4 py-2 border-2 border-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all">Refresh</button>
@@ -498,7 +501,7 @@ export default function AdminDashboard() {
 
               <div className="overflow-x-auto rounded-xl border border-gray-200">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                  <thead className="bg-gradient-to-r from-emerald-50 to-teal-50">
                     <tr>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Name</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Email</th>
@@ -520,10 +523,10 @@ export default function AdminDashboard() {
                         role === "admin"
                           ? "bg-purple-100 text-purple-800"
                           : role === "supplier"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-green-100 text-green-800";
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-emerald-100 text-emerald-800";
                       return (
-                        <tr key={uid} className="hover:bg-blue-50/50 transition-colors">
+                        <tr key={uid} className="hover:bg-emerald-50/50 transition-colors">
                           <td className="px-6 py-4 font-medium text-gray-900">{user.name}</td>
                           <td className="px-6 py-4 text-gray-600">{user.email}</td>
                           <td className="px-6 py-4">
@@ -532,7 +535,7 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm font-medium">
-                            <button onClick={() => navigate(`/admin/users/${uid}/edit`)} className="text-blue-600 hover:text-blue-800 mr-4 font-semibold transition-colors">
+                            <button onClick={() => navigate(`/admin/users/${uid}/edit`)} className="text-emerald-600 hover:text-emerald-800 mr-4 font-semibold transition-colors">
                               <FiEdit className="inline mr-1" /> Edit
                             </button>
                             <button onClick={() => handleDeleteUser(uid)} className="text-red-600 hover:text-red-800 font-semibold transition-colors">
@@ -554,7 +557,7 @@ export default function AdminDashboard() {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">Categories Management</h2>
                 <div className="flex items-center space-x-2">
-                  <button onClick={() => navigate("/admin/categories/add")} className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                  <button onClick={() => navigate("/admin/categories/add")} className="flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700">
                     <FiPlus className="mr-2" /> Add Category
                   </button>
                   <button onClick={fetchCategories} className="px-3 py-2 border rounded-md text-sm">Refresh</button>
@@ -563,13 +566,13 @@ export default function AdminDashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {categories.map((category) => (
-                  <motion.div key={category.id ?? category._id} whileHover={{ y: -5 }} className="border rounded-lg p-4 shadow-sm hover:shadow-md">
+                  <motion.div key={category.id ?? category._id} whileHover={{ y: -5 }} className="border rounded-xl p-4 shadow-sm hover:shadow-lg bg-white transition-all">
                     <div className="flex justify-between items-start">
                       <h3 className="font-medium text-lg">{category.name}</h3>
-                      <span className="bg-gray-100 px-2 py-1 rounded text-sm">{category.productCount ?? category.count ?? 0} products</span>
+                      <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-lg text-sm">{category.productCount ?? category.count ?? 0} products</span>
                     </div>
                     <div className="mt-4 flex space-x-2">
-                      <button onClick={() => navigate(`/admin/categories/${category.id ?? category._id}/edit`)} className="flex items-center text-sm text-blue-600 hover:text-blue-800">
+                      <button onClick={() => navigate(`/admin/categories/${category.id ?? category._id}/edit`)} className="flex items-center text-sm text-emerald-600 hover:text-emerald-800">
                         <FiEdit className="mr-1" /> Edit
                       </button>
                       <button onClick={() => handleDeleteCategory(category.id ?? category._id)} className="flex items-center text-sm text-red-600 hover:text-red-800">
@@ -596,7 +599,7 @@ export default function AdminDashboard() {
 
               <div className="space-y-4">
                 {orders.map((order) => (
-                  <div key={order.id ?? order._id} className="border rounded-lg p-4 hover:shadow transition-shadow">
+                  <div key={order.id ?? order._id} className="border rounded-xl p-4 hover:shadow-lg transition-shadow bg-white">
                     <div className="flex justify-between items-center">
                       <div>
                         <h3 className="font-medium">Order #{order.id ?? order._id} — ${Number(order.total ?? 0).toFixed(2)}</h3>
@@ -604,10 +607,10 @@ export default function AdminDashboard() {
                         <p className="text-sm text-gray-600">Date: {order.date}</p>
                       </div>
                       <div className="flex items-center">
-                        <span className={`px-3 py-1 rounded-full text-sm ${order.status === "Delivered" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
+                        <span className={`px-3 py-1 rounded-full text-sm ${order.status === "Delivered" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
                           {order.status}
                         </span>
-                        <button onClick={() => navigate(`/admin/orders/${order.id ?? order._id}`)} className="ml-4 flex items-center text-sm text-blue-600 hover:text-blue-800">
+                        <button onClick={() => navigate(`/admin/orders/${order.id ?? order._id}`)} className="ml-4 flex items-center text-sm text-emerald-600 hover:text-emerald-800">
                           <FiFileText className="mr-1" /> Details
                         </button>
                       </div>
@@ -617,16 +620,16 @@ export default function AdminDashboard() {
                       <div className="flex items-center space-x-2">
                         {order.status !== "Delivered" && (
                           <>
-                            <button onClick={() => handleUpdateOrderStatus(order.id ?? order._id, "Processing")} className="px-3 py-1 bg-blue-100 text-blue-800 rounded">Set Processing</button>
-                            <button onClick={() => handleUpdateOrderStatus(order.id ?? order._id, "Shipped")} className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded">Set Shipped</button>
-                            <button onClick={() => handleUpdateOrderStatus(order.id ?? order._id, "Delivered")} className="px-3 py-1 bg-green-100 text-green-800 rounded">Mark Delivered</button>
+                            <button onClick={() => handleUpdateOrderStatus(order.id ?? order._id, "Processing")} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg">Set Processing</button>
+                            <button onClick={() => handleUpdateOrderStatus(order.id ?? order._id, "Shipped")} className="px-3 py-1 bg-amber-100 text-amber-800 rounded-lg">Set Shipped</button>
+                            <button onClick={() => handleUpdateOrderStatus(order.id ?? order._id, "Delivered")} className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-lg">Mark Delivered</button>
                           </>
                         )}
                       </div>
 
                       <div className="flex items-center space-x-2">
-                        <button onClick={() => navigate(`/admin/orders/${order.id ?? order._id}/edit`)} className="flex items-center px-3 py-1 border rounded">Edit</button>
-                        <button onClick={() => api.delete(`/admin/orders/${order.id ?? order._id}`, { headers: getAuthHeaders() }).then(() => setOrders((p) => p.filter(o => (o.id ?? o._id) !== (order.id ?? order._id)))).catch(() => alert("Failed to delete"))} className="flex items-center px-3 py-1 bg-red-600 text-white rounded">Delete</button>
+                        <button onClick={() => navigate(`/admin/orders/${order.id ?? order._id}/edit`)} className="flex items-center px-3 py-1 border rounded-lg">Edit</button>
+                        <button onClick={() => api.delete(`/admin/orders/${order.id ?? order._id}`, { headers: getAuthHeaders() }).then(() => setOrders((p) => p.filter(o => (o.id ?? o._id) !== (order.id ?? order._id)))).catch(() => alert("Failed to delete"))} className="flex items-center px-3 py-1 bg-red-600 text-white rounded-lg">Delete</button>
                       </div>
                     </div>
                   </div>
@@ -640,18 +643,18 @@ export default function AdminDashboard() {
             <div>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">Generate Reports</h2>
-                <div className="flex items-center space-x-2">
-                  <button onClick={() => loadAndShowReport("sales")} className="p-3 border rounded hover:shadow-sm flex items-center">
-                    <FiShoppingCart className="mr-2" /> Sales Report
+                <div className="flex items-center space-x-2 flex-wrap gap-2">
+                  <button onClick={() => loadAndShowReport("sales")} className="p-3 border rounded-xl hover:shadow-md bg-white flex items-center transition-all">
+                    <FiShoppingCart className="mr-2 text-emerald-600" /> Sales Report
                   </button>
-                  <button onClick={() => loadAndShowReport("inventory")} className="p-3 border rounded hover:shadow-sm flex items-center">
-                    <FiDatabase className="mr-2" /> Inventory Report
+                  <button onClick={() => loadAndShowReport("inventory")} className="p-3 border rounded-xl hover:shadow-md bg-white flex items-center transition-all">
+                    <FiDatabase className="mr-2 text-emerald-600" /> Inventory Report
                   </button>
-                  <button onClick={() => loadAndShowReport("users")} className="p-3 border rounded hover:shadow-sm flex items-center">
-                    <FiUsers className="mr-2" /> Users Report
+                  <button onClick={() => loadAndShowReport("users")} className="p-3 border rounded-xl hover:shadow-md bg-white flex items-center transition-all">
+                    <FiUsers className="mr-2 text-emerald-600" /> Users Report
                   </button>
-                  <button onClick={() => loadAndShowReport("products")} className="p-3 border rounded hover:shadow-sm flex items-center">
-                    <FiPackage className="mr-2" /> Products Report
+                  <button onClick={() => loadAndShowReport("products")} className="p-3 border rounded-xl hover:shadow-md bg-white flex items-center transition-all">
+                    <FiPackage className="mr-2 text-emerald-600" /> Products Report
                   </button>
                 </div>
               </div>
@@ -780,26 +783,26 @@ export default function AdminDashboard() {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-800">Stock Alerts</h2>
                 <div className="flex items-center space-x-2">
-                  <button onClick={handleResolveAllAlerts} className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                  <button onClick={handleResolveAllAlerts} className="flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700">
                     <FiCheckCircle className="mr-2" /> Resolve All
                   </button>
-                  <button onClick={fetchStockAlerts} className="px-3 py-2 border rounded-md text-sm">Refresh</button>
+                  <button onClick={fetchStockAlerts} className="px-3 py-2 border rounded-xl text-sm">Refresh</button>
                 </div>
               </div>
 
               <div className="space-y-4">
                 {stockAlerts.length === 0 && <p className="text-sm text-gray-500">No active alerts.</p>}
                 {stockAlerts.map((alert) => (
-                  <motion.div key={alert.id ?? alert._id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="border-l-4 border-red-500 bg-red-50 p-4 rounded-r-lg flex justify-between items-center">
+                  <motion.div key={alert.id ?? alert._id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="border-l-4 border-red-500 bg-red-50 p-4 rounded-r-xl flex justify-between items-center">
                     <div>
                       <h3 className="font-medium">{alert.product}</h3>
                       <p className="text-sm">Current stock: <span className="font-semibold">{alert.currentStock}</span> | Threshold: <span className="font-semibold">{alert.threshold}</span></p>
                     </div>
                     <div className="flex space-x-2">
-                      <button onClick={() => navigate(`/admin/products/${alert.productId ?? alert._id}/edit`)} className="flex items-center px-3 py-1 bg-white text-red-600 rounded hover:bg-red-100">
+                      <button onClick={() => navigate(`/admin/products/${alert.productId ?? alert._id}/edit`)} className="flex items-center px-3 py-1 bg-white text-red-600 rounded-lg hover:bg-red-100">
                         <FiEdit className="mr-1" /> Update Stock
                       </button>
-                      <button onClick={() => handleResolveAlert(alert.id ?? alert._id)} className="flex items-center px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">
+                      <button onClick={() => handleResolveAlert(alert.id ?? alert._id)} className="flex items-center px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700">
                         <FiCheck className="mr-1" /> Resolve
                       </button>
                     </div>

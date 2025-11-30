@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { FaEnvelope, FaLock, FaSignInAlt, FaTruck } from 'react-icons/fa';
 import api from '../api/axios';
 import { jwtDecode } from 'jwt-decode';
+import toast from 'react-hot-toast';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -52,25 +55,23 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      // Ensure payload matches backend exactly
       const payload = {
         email: formData.email.trim(),
-        motdepasse: formData.motdepasse // Using motdepasse instead of mdp
+        motdepasse: formData.motdepasse
       };
 
-      console.log('Sending login request:', payload);
       const response = await api.post('/users/login', payload);
 
       if (response.data.success) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
-        
-        // Set default auth header
         api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
 
-        // Redirect based on role
         const decodedToken = jwtDecode(response.data.token);
         const role = decodedToken.role.toLowerCase();
+        
+        toast.success('Connexion réussie!');
+        
         const redirectPath = {
           admin: '/admin-dashboard',
           fournisseur: '/fournisseur-dashboard',
@@ -80,146 +81,182 @@ export default function Login() {
         navigate(redirectPath, { replace: true });
       }
     } catch (err) {
-      console.error('Login error:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status
-      });
-      
-      setErrors({
-        general: err.response?.data?.message || 
-                'Échec de la connexion. Veuillez réessayer.'
-      });
+      console.error('Login error:', err);
+      const errorMsg = err.response?.data?.message || 'Échec de la connexion. Veuillez réessayer.';
+      setErrors({ general: errorMsg });
+      toast.error(errorMsg);
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Animated background elements */}
+    <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-teal-800 to-emerald-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-500/30 rounded-full blur-3xl animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-teal-500/30 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
+        <div className="absolute top-1/3 left-1/3 w-72 h-72 bg-cyan-500/20 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
       </div>
-      
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+
+      {/* Grid Pattern */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.03%22%3E%3Cpath d=%22M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="sm:mx-auto sm:w-full sm:max-w-md relative z-10"
+      >
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">LIVRINI</h1>
-          <h2 className="text-2xl font-semibold text-white/90">
-            Se connecter
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 200 }}
+            className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-2xl mx-auto mb-4 flex items-center justify-center border border-white/20"
+          >
+            <FaTruck className="text-4xl text-white" />
+          </motion.div>
+          <h1 className="text-4xl font-black text-white mb-2">LIVRINI</h1>
+          <h2 className="text-xl font-medium text-emerald-200">
+            Connectez-vous à votre compte
           </h2>
-          <p className="mt-2 text-sm text-white/80">
-            Nouveau membre?{' '}
-            <Link 
-              to="/register" 
-              className="font-medium text-white hover:text-blue-200 transition-colors underline"
-            >
-              Créer un compte
-            </Link>
-          </p>
         </div>
-      </div>
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="glass bg-white/95 backdrop-blur-xl py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-white/20">
+      </motion.div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="sm:mx-auto sm:w-full sm:max-w-md relative z-10"
+      >
+        <div className="bg-white/95 backdrop-blur-xl py-10 px-8 shadow-2xl rounded-3xl border border-white/20">
           {registrationSuccess && (
-            <div className="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded">
-              <p className="text-sm text-green-600">
-                Inscription réussie! Vous pouvez maintenant vous connecter{registeredEmail && ` avec ${registeredEmail}`}.
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mb-6 bg-emerald-50 border border-emerald-200 p-4 rounded-xl"
+            >
+              <p className="text-sm text-emerald-700 flex items-center gap-2">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                Inscription réussie! Connectez-vous{registeredEmail && ` avec ${registeredEmail}`}.
               </p>
-            </div>
+            </motion.div>
           )}
+
           {errors.general && (
-            <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="mb-6 bg-red-50 border border-red-200 p-4 rounded-xl"
+            >
               <p className="text-sm text-red-600">{errors.general}</p>
-            </div>
+            </motion.div>
           )}
+
           <form className="space-y-6" onSubmit={handleSubmit} noValidate>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email *
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                Adresse Email
               </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                className={`mt-1 block w-full border-2 ${
-                  errors.email ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
-                } rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-4 transition-all bg-white/50 backdrop-blur-sm`}
-                placeholder="votre@email.com"
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-              )}
-            </div>
-            <div>
-              <label htmlFor="motdepasse" className="block text-sm font-medium text-gray-700">
-                Mot de passe *
-              </label>
-              <input
-                id="motdepasse"
-                name="motdepasse"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={formData.motdepasse}
-                onChange={handleChange}
-                className={`mt-1 block w-full border-2 ${
-                  errors.motdepasse ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-blue-500 focus:ring-blue-200'
-                } rounded-lg shadow-sm py-3 px-4 focus:outline-none focus:ring-4 transition-all bg-white/50 backdrop-blur-sm`}
-                placeholder="••••••••"
-              />
-              {errors.motdepasse && (
-                <p className="mt-1 text-sm text-red-600">{errors.motdepasse}</p>
-              )}
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
+              <div className="relative">
+                <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl transition-all focus:outline-none focus:ring-4 ${
+                    errors.email 
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-100' 
+                      : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-100'
+                  }`}
+                  placeholder="votre@email.com"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                  Se souvenir de moi
-                </label>
               </div>
-              <div className="text-sm">
-                <Link 
-                  to="/forgot-password" 
-                  className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
-                >
-                  Mot de passe oublié?
-                </Link>
-              </div>
+              {errors.email && (
+                <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+              )}
             </div>
+
             <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
-                  isLoading ? 'opacity-70 cursor-not-allowed' : ''
-                }`}
-              >
-                {isLoading ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Connexion en cours...
-                  </>
-                ) : 'Se connecter'}
-              </button>
+              <label htmlFor="motdepasse" className="block text-sm font-semibold text-gray-700 mb-2">
+                Mot de passe
+              </label>
+              <div className="relative">
+                <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  id="motdepasse"
+                  name="motdepasse"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={formData.motdepasse}
+                  onChange={handleChange}
+                  className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl transition-all focus:outline-none focus:ring-4 ${
+                    errors.motdepasse 
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-100' 
+                      : 'border-gray-200 focus:border-emerald-500 focus:ring-emerald-100'
+                  }`}
+                  placeholder="••••••••"
+                />
+              </div>
+              {errors.motdepasse && (
+                <p className="mt-2 text-sm text-red-600">{errors.motdepasse}</p>
+              )}
             </div>
+
+            <div className="flex items-center justify-between">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                />
+                <span className="ml-2 text-sm text-gray-600">Se souvenir de moi</span>
+              </label>
+              <Link to="/forgot-password" className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">
+                Mot de passe oublié?
+              </Link>
+            </div>
+
+            <motion.button
+              type="submit"
+              disabled={isLoading}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`w-full flex justify-center items-center gap-2 py-4 px-6 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/30 transition-all ${
+                isLoading ? 'opacity-70 cursor-not-allowed' : ''
+              }`}
+            >
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Connexion...
+                </>
+              ) : (
+                <>
+                  <FaSignInAlt /> Se connecter
+                </>
+              )}
+            </motion.button>
           </form>
+
+          <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+            <p className="text-gray-600">
+              Pas encore de compte?{' '}
+              <Link to="/register" className="text-emerald-600 hover:text-emerald-700 font-semibold">
+                Inscrivez-vous
+              </Link>
+            </p>
+          </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

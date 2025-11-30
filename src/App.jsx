@@ -14,6 +14,8 @@ import ProfilePage from './pages/ProfilePage';
 import AdminCreateUserPage from './pages/AdminCreateUserPage';
 import Orders from './pages/Orders';
 import Deliveries from './pages/Deliveries';
+import Cart from './pages/Cart';
+import About from './pages/About';
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const token = localStorage.getItem('token');
@@ -42,6 +44,7 @@ function App() {
           {/* Public routes */}
           <Route path="/" element={<Accueil />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/about" element={<About />} />
           <Route path="/products/:category?" element={<ProductPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<ProfilePage />} />
@@ -49,6 +52,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/deliveries" element={<Deliveries />} />
+          <Route path="/cart" element={<Cart />} />
 
           {/* Dashboard routes */}
           <Route

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FiRefreshCw, FiSearch, FiMapPin, FiTruck, FiCalendar } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api/axios';
 
 const Deliveries = () => {
@@ -7,6 +7,7 @@ const Deliveries = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
+  const [selectedDelivery, setSelectedDelivery] = useState(null);
 
   const extractList = (res) => {
     const data = res?.data;
@@ -40,82 +41,257 @@ const Deliveries = () => {
     return id.includes(query) || status.includes(query.toLowerCase()) || address.includes(query.toLowerCase());
   });
 
+  const getStatusConfig = (status) => {
+    const s = status.toLowerCase();
+    if (s === 'livrée' || s === 'delivered' || s === 'livré') {
+      return { bg: 'bg-emerald-100', text: 'text-emerald-800', icon: '✅', label: 'Livrée', progress: 100 };
+    }
+    if (s === 'en transit' || s === 'shipped' || s === 'expédiée') {
+      return { bg: 'bg-blue-100', text: 'text-blue-800', icon: '🚚', label: 'En transit', progress: 66 };
+    }
+    if (s === 'en préparation' || s === 'processing' || s === 'préparation') {
+      return { bg: 'bg-amber-100', text: 'text-amber-800', icon: '📦', label: 'En préparation', progress: 33 };
+    }
+    if (s === 'annulée' || s === 'cancelled') {
+      return { bg: 'bg-red-100', text: 'text-red-800', icon: '❌', label: 'Annulée', progress: 0 };
+    }
+    return { bg: 'bg-gray-100', text: 'text-gray-800', icon: '📋', label: status, progress: 0 };
+  };
+
+  // Stats
+  const stats = {
+    total: deliveries.length,
+    delivered: deliveries.filter(d => ['livrée', 'delivered', 'livré'].includes((d.status || d.statut || '').toLowerCase())).length,
+    inTransit: deliveries.filter(d => ['en transit', 'shipped', 'expédiée'].includes((d.status || d.statut || '').toLowerCase())).length,
+    pending: deliveries.filter(d => ['en préparation', 'processing', 'préparation'].includes((d.status || d.statut || '').toLowerCase())).length
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6 md:p-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-3xl font-bold gradient-text">Mes Livraisons</h1>
-              <p className="text-gray-600">Suivez le statut de vos livraisons</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <FiSearch className="absolute left-3 top-3 text-gray-400" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Rechercher par statut, ID ou adresse"
-                  className="pl-10 pr-3 py-2 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-200 bg-white/50"
-                />
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 py-8 px-4 sm:px-6 lg:px-8">
+      {/* Header */}
+      <div className="max-w-6xl mx-auto mb-8">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <span className="inline-block px-4 py-2 bg-emerald-100 text-emerald-800 rounded-full text-sm font-medium mb-4">
+            🚚 Suivi de livraisons
+          </span>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Mes Livraisons</h1>
+          <p className="text-gray-600">Suivez le statut de vos livraisons en temps réel</p>
+        </motion.div>
+      </div>
+
+      <div className="max-w-6xl mx-auto">
+        {/* Stats Cards */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+        >
+          {[
+            { icon: '📦', label: 'Total', value: stats.total, color: 'from-emerald-500 to-teal-600' },
+            { icon: '✅', label: 'Livrées', value: stats.delivered, color: 'from-green-500 to-emerald-600' },
+            { icon: '🚚', label: 'En transit', value: stats.inTransit, color: 'from-blue-500 to-indigo-600' },
+            { icon: '⏳', label: 'En préparation', value: stats.pending, color: 'from-amber-500 to-orange-600' },
+          ].map((stat, i) => (
+            <div key={i} className="bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
+              <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} flex items-center justify-center mb-3`}>
+                <span className="text-xl">{stat.icon}</span>
               </div>
-              <button
-                onClick={fetchDeliveries}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg flex items-center gap-2"
-              >
-                <FiRefreshCw /> Rafraîchir
-              </button>
+              <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+              <p className="text-sm text-gray-500">{stat.label}</p>
             </div>
+          ))}
+        </motion.div>
+
+        {/* Search & Actions */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 mb-6"
+        >
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="relative flex-1 max-w-md">
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Rechercher par statut, ID ou adresse..."
+                className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-200 bg-gray-50 transition-all"
+              />
+            </div>
+            <button
+              onClick={fetchDeliveries}
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 shadow-lg hover:shadow-xl transition-all flex items-center gap-2 font-medium"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Rafraîchir
+            </button>
           </div>
+        </motion.div>
 
-          {loading && (
-            <div className="py-20 text-center">Chargement…</div>
-          )}
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>
-          )}
+        {/* Loading State */}
+        {loading && (
+          <div className="py-20 text-center">
+            <div className="relative w-20 h-20 mx-auto mb-4">
+              <div className="w-20 h-20 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-2xl">🚚</span>
+              </div>
+            </div>
+            <p className="text-gray-600">Chargement de vos livraisons...</p>
+          </div>
+        )}
 
-          {!loading && filtered.length === 0 && (
-            <div className="py-20 text-center text-gray-600">Aucune livraison trouvée.</div>
-          )}
+        {/* Error State */}
+        {error && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3"
+          >
+            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+              <span className="text-xl">⚠️</span>
+            </div>
+            <div>
+              <p className="font-medium text-red-800">Erreur de chargement</p>
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          </motion.div>
+        )}
 
+        {/* Empty State */}
+        {!loading && filtered.length === 0 && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="py-20 text-center"
+          >
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-4xl">🚫</span>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Aucune livraison trouvée</h3>
+            <p className="text-gray-600 mb-6">
+              {query ? `Aucun résultat pour "${query}"` : "Vous n'avez pas encore de livraison en cours"}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Deliveries List */}
+        <AnimatePresence>
           <div className="space-y-4">
-            {filtered.map((d) => {
+            {filtered.map((d, index) => {
               const id = d.id || d._id;
               const status = d.status || d.statut || 'Inconnu';
+              const statusConfig = getStatusConfig(status);
               const date = d.date || d.updatedAt || d.createdAt || '';
               const address = d.adresse || d.address || '-';
-              const carrier = d.transporteur || d.carrier || '—';
+              const carrier = d.transporteur || d.carrier || 'LIVRINI Express';
+              
               return (
-                <div key={id} className="border border-gray-200 rounded-xl p-4 bg-white/70">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <FiTruck className="text-blue-600" />
-                      <div>
-                        <div className="font-semibold">Livraison #{id}</div>
-                        <div className="text-sm text-gray-500 flex items-center gap-2">
-                          <FiCalendar /> {new Date(date).toLocaleString()}
+                <motion.div 
+                  key={id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all"
+                >
+                  <div className="p-5">
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                      {/* Delivery Info */}
+                      <div className="flex items-start gap-4">
+                        <div className="w-14 h-14 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <span className="text-2xl">🚚</span>
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-gray-900 text-lg">Livraison #{id?.slice(-8)}</h3>
+                          <p className="text-sm text-gray-500 flex items-center gap-2 mt-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {date ? new Date(date).toLocaleDateString('fr-FR', { 
+                              day: 'numeric', 
+                              month: 'long', 
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            }) : 'Date inconnue'}
+                          </p>
+                          <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            {address}
+                          </p>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        status.toLowerCase() === 'livrée' || status.toLowerCase() === 'delivered' ? 'bg-green-100 text-green-800'
-                        : status.toLowerCase() === 'en transit' || status.toLowerCase() === 'shipped' ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-gray-100 text-gray-800'
-                      }`}>{status}</span>
-                      <div className="text-gray-600 text-sm flex items-center gap-2">
-                        <FiMapPin /> {address}
+
+                      {/* Status Badge */}
+                      <div className={`px-4 py-2 rounded-xl ${statusConfig.bg} ${statusConfig.text} font-medium flex items-center gap-2 self-start`}>
+                        <span>{statusConfig.icon}</span>
+                        {statusConfig.label}
                       </div>
                     </div>
+
+                    {/* Progress Bar */}
+                    <div className="mt-6">
+                      <div className="flex justify-between text-xs text-gray-500 mb-2">
+                        <span>Préparation</span>
+                        <span>En transit</span>
+                        <span>Livrée</span>
+                      </div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${statusConfig.progress}%` }}
+                          transition={{ duration: 0.5, delay: 0.2 }}
+                          className="h-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Carrier Info */}
+                    <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      <span>Transporteur: <strong>{carrier}</strong></span>
+                    </div>
                   </div>
-                  <div className="mt-2 text-sm text-gray-600">Transporteur: {carrier}</div>
-                </div>
+
+                  {/* Actions */}
+                  <div className="bg-gray-50 px-5 py-3 flex items-center justify-between border-t border-gray-100">
+                    <button
+                      onClick={() => setSelectedDelivery(selectedDelivery === id ? null : id)}
+                      className="text-emerald-600 hover:text-emerald-700 font-medium text-sm flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                      </svg>
+                      Suivre sur la carte
+                    </button>
+                    <button className="text-gray-600 hover:text-gray-800 text-sm flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                      Contacter le livreur
+                    </button>
+                  </div>
+                </motion.div>
               );
             })}
           </div>
-        </div>
+        </AnimatePresence>
       </div>
     </div>
   );
