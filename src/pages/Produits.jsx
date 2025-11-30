@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProductCard from '../components/ProductCard';
 import api from '../api/axios';
+
+const PRODUCTS_PER_PAGE = 12;
 
 const ProductPage = () => {
   const { category } = useParams();
@@ -15,6 +17,11 @@ const ProductPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [priceRange, setPriceRange] = useState([0, 10000]);
+  
+  // Infinite scroll state
+  const [displayedCount, setDisplayedCount] = useState(PRODUCTS_PER_PAGE);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const loaderRef = useRef(null);
 
   // Category icons mapping
   const categoryIcons = {
@@ -91,6 +98,11 @@ const ProductPage = () => {
     fetchProducts();
   }, []);
 
+  // Reset displayed count when filters change
+  useEffect(() => {
+    setDisplayedCount(PRODUCTS_PER_PAGE);
+  }, [selectedCategory, searchQuery, sortOption, priceRange]);
+
   // Memoized filtered and sorted products
   const processedProducts = React.useMemo(() => {
     let filtered = selectedCategory === 'all'
@@ -128,6 +140,40 @@ const ProductPage = () => {
       }
     });
   }, [products, selectedCategory, sortOption, searchQuery, priceRange]);
+
+  // Get displayed products (for infinite scroll)
+  const displayedProducts = React.useMemo(() => {
+    return processedProducts.slice(0, displayedCount);
+  }, [processedProducts, displayedCount]);
+
+  const hasMoreProducts = displayedCount < processedProducts.length;
+
+  // Intersection Observer for infinite scroll
+  const handleObserver = useCallback((entries) => {
+    const target = entries[0];
+    if (target.isIntersecting && hasMoreProducts && !loadingMore) {
+      setLoadingMore(true);
+      // Simulate loading delay for smooth UX
+      setTimeout(() => {
+        setDisplayedCount(prev => Math.min(prev + PRODUCTS_PER_PAGE, processedProducts.length));
+        setLoadingMore(false);
+      }, 300);
+    }
+  }, [hasMoreProducts, loadingMore, processedProducts.length]);
+
+  useEffect(() => {
+    const option = {
+      root: null,
+      rootMargin: '100px',
+      threshold: 0.1
+    };
+    const observer = new IntersectionObserver(handleObserver, option);
+    if (loaderRef.current) observer.observe(loaderRef.current);
+    
+    return () => {
+      if (loaderRef.current) observer.unobserve(loaderRef.current);
+    };
+  }, [handleObserver]);
 
   // Animation variants
   const containerVariants = {
@@ -283,7 +329,7 @@ const ProductPage = () => {
         <div className="bg-white rounded-2xl shadow-lg p-4 mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4 flex-wrap">
             <span className="text-gray-600 font-medium">
-              {processedProducts.length} produit{processedProducts.length !== 1 ? 's' : ''} trouvé{processedProducts.length !== 1 ? 's' : ''}
+              {displayedProducts.length} sur {processedProducts.length} produit{processedProducts.length !== 1 ? 's' : ''}
             </span>
             
             {/* View Mode Toggle */}
@@ -329,7 +375,7 @@ const ProductPage = () => {
 
         {/* Product Grid */}
         <AnimatePresence mode="wait">
-          {processedProducts.length > 0 ? (
+          {displayedProducts.length > 0 ? (
             <motion.div
               key="products"
               variants={containerVariants}
@@ -341,7 +387,7 @@ const ProductPage = () => {
                 : "flex flex-col gap-4"
               }
             >
-              {processedProducts.map((product, index) => (
+              {displayedProducts.map((product, index) => (
                 <motion.div
                   key={product._id}
                   variants={itemVariants}
@@ -400,6 +446,49 @@ const ProductPage = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Infinite Scroll Loader */}
+        {hasMoreProducts && (
+          <div ref={loaderRef} className="flex justify-center items-center py-8">
+            {loadingMore ? (
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 border-3 border-emerald-200 rounded-full animate-spin border-t-emerald-600"></div>
+                <span className="text-gray-600">Chargement...</span>
+              </div>
+            ) : (
+              <div className="w-8 h-8 opacity-0"></div>
+            )}
+          </div>
+        )}
+
+        {/* Load More Button (fallback) */}
+        {hasMoreProducts && !loadingMore && (
+          <div className="flex justify-center mt-4">
+            <button
+              onClick={() => setDisplayedCount(prev => Math.min(prev + PRODUCTS_PER_PAGE, processedProducts.length))}
+              className="px-6 py-3 bg-white border-2 border-emerald-500 text-emerald-600 rounded-xl font-medium hover:bg-emerald-50 transition-all duration-300 flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+              Charger plus ({processedProducts.length - displayedCount} restants)
+            </button>
+          </div>
+        )}
+
+        {/* Scroll to Top Button */}
+        {displayedCount > PRODUCTS_PER_PAGE && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-8 right-8 w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-50"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+            </svg>
+          </motion.button>
+        )}
 
         {/* Quick Stats */}
         {processedProducts.length > 0 && (
