@@ -1,23 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { FaShoppingCart, FaHeart, FaEye, FaStar } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
-const ProductCard = ({ product }) => {
+// Optimized image component with lazy loading
+const LazyImage = memo(({ src, alt, className }) => {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+  const fallbackSrc = 'https://images.unsplash.com/photo-1560393464-5c69a73c5770?w=400&h=300&fit=crop&q=75';
+  
+  // Optimize Unsplash URLs for better performance
+  const optimizedSrc = src?.includes('unsplash.com') 
+    ? src.replace(/w=\d+/, 'w=400').replace(/q=\d+/, 'q=75') + '&auto=format'
+    : src;
+  
+  return (
+    <div className="relative w-full h-full">
+      {!loaded && (
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" />
+      )}
+      <img
+        src={error ? fallbackSrc : optimizedSrc}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        className={`${className} ${loaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200`}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          setError(true);
+          setLoaded(true);
+        }}
+      />
+    </div>
+  );
+});
+
+LazyImage.displayName = 'LazyImage';
+
+const ProductCard = memo(({ product }) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-
-  // Animation variants
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5 }
-    },
-    hover: { y: -8 }
-  };
 
   // Status badge styling
   const getStatusStyle = (status) => {
@@ -77,62 +99,51 @@ const ProductCard = ({ product }) => {
   }, [product._id]);
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      whileHover="hover"
-      variants={cardVariants}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-2xl transition-all duration-300 flex flex-col h-full group"
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-2xl hover:-translate-y-1 transition-all duration-200 flex flex-col h-full group"
     >
       {/* Image Container */}
       <div className="relative h-56 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
-        <motion.img
-          src={product.imageURL || 'https://images.unsplash.com/photo-1560393464-5c69a73c5770?w=400&h=300&fit=crop'}
+        <LazyImage
+          src={product.imageURL || 'https://images.unsplash.com/photo-1560393464-5c69a73c5770?w=400&h=300&fit=crop&q=75'}
           alt={product.nom}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          onError={(e) => {
-            e.target.src = 'https://images.unsplash.com/photo-1560393464-5c69a73c5770?w=400&h=300&fit=crop';
-          }}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
         
         {/* Overlay Actions */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isHovered ? 1 : 0 }}
-          className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center gap-3"
+        <div
+          className={`absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center gap-3 transition-opacity duration-200 ${
+            isHovered ? 'opacity-100' : 'opacity-0'
+          }`}
         >
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+          <button
             onClick={addToCart}
-            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg text-emerald-600 hover:bg-emerald-600 hover:text-white transition-colors"
+            className="w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg text-emerald-600 hover:bg-emerald-600 hover:text-white transition-colors duration-150 active:scale-95"
+            aria-label="Ajouter au panier"
           >
             <FaShoppingCart className="text-lg" />
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+          </button>
+          <button
             onClick={toggleWishlist}
-            className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-colors ${
+            className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg transition-colors duration-150 active:scale-95 ${
               isWishlisted 
                 ? 'bg-red-500 text-white' 
                 : 'bg-white text-red-500 hover:bg-red-500 hover:text-white'
             }`}
+            aria-label={isWishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris'}
           >
             <FaHeart className="text-lg" />
-          </motion.button>
-          <Link to={`/products/${product._id}`}>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg text-blue-600 hover:bg-blue-600 hover:text-white transition-colors"
+          </button>
+          <Link to={`/products/${product._id}`} aria-label="Voir le produit">
+            <button
+              className="w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-lg text-blue-600 hover:bg-blue-600 hover:text-white transition-colors duration-150 active:scale-95"
             >
               <FaEye className="text-lg" />
-            </motion.button>
+            </button>
           </Link>
-        </motion.div>
+        </div>
 
         {/* Stock Badge */}
         {product.quantiteStock <= 5 && product.quantiteStock > 0 && (
@@ -196,24 +207,24 @@ const ProductCard = ({ product }) => {
               {(product.prix || 0).toFixed(2)} <span className="text-sm">TND</span>
             </p>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <button
             onClick={addToCart}
             disabled={product.quantiteStock === 0}
-            className={`px-4 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all shadow-lg ${
+            className={`px-4 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-all duration-150 shadow-lg active:scale-95 ${
               product.quantiteStock === 0
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-emerald-500/30'
+                : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-emerald-500/30 hover:brightness-110'
             }`}
           >
             <FaShoppingCart />
             <span className="hidden sm:inline">Ajouter</span>
-          </motion.button>
+          </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
-};
+});
+
+ProductCard.displayName = 'ProductCard';
 
 export default ProductCard;

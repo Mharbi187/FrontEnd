@@ -1,21 +1,34 @@
 import './App.css';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import Layout from './components/Layout';
-import Accueil from './pages/Accueil';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Services from './pages/Services';
-import ClientDashboard from './pages/ClientDashboard';
-import AdminDashboard from './pages/AdminDashboard';
-import FournisseurDashboard from './pages/FournisseurDashboard';
-import ProductPage from './pages/Produits';
 import { jwtDecode } from 'jwt-decode';
-import ProfilePage from './pages/ProfilePage';
-import AdminCreateUserPage from './pages/AdminCreateUserPage';
-import Orders from './pages/Orders';
-import Deliveries from './pages/Deliveries';
-import Cart from './pages/Cart';
-import About from './pages/About';
+
+// Lazy load pages for better code splitting
+const Accueil = lazy(() => import('./pages/Accueil'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Services = lazy(() => import('./pages/Services'));
+const ClientDashboard = lazy(() => import('./pages/ClientDashboard'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const FournisseurDashboard = lazy(() => import('./pages/FournisseurDashboard'));
+const ProductPage = lazy(() => import('./pages/Produits'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const AdminCreateUserPage = lazy(() => import('./pages/AdminCreateUserPage'));
+const Orders = lazy(() => import('./pages/Orders'));
+const Deliveries = lazy(() => import('./pages/Deliveries'));
+const Cart = lazy(() => import('./pages/Cart'));
+const About = lazy(() => import('./pages/About'));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-50">
+    <div className="text-center">
+      <div className="w-16 h-16 border-4 border-emerald-200 rounded-full animate-spin border-t-emerald-600 mx-auto"></div>
+      <p className="mt-4 text-gray-600 font-medium">Chargement...</p>
+    </div>
+  </div>
+);
 
 const ProtectedRoute = ({ allowedRoles, children }) => {
   const token = localStorage.getItem('token');
@@ -40,7 +53,8 @@ function App() {
   return (
     <Router>
       <Layout>
-        <Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
           {/* Public routes */}
           <Route path="/" element={<Accueil />} />
           <Route path="/services" element={<Services />} />
@@ -81,6 +95,7 @@ function App() {
             }
           />
         </Routes>
+        </Suspense>
       </Layout>
     </Router>
   );
