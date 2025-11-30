@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProductCard from '../components/ProductCard';
+import api from '../api/axios';
 
 const ProductPage = () => {
   const { category } = useParams();
@@ -25,16 +25,6 @@ const ProductPage = () => {
     'Meuble': '🪑',
     'Fitness': '💪'
   };
-
-  // Enhanced API client with error handling
-  const api = axios.create({
-    baseURL: 'http://localhost:5000/api',
-    timeout: 10000,
-    headers: {
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache'
-    }
-  });
 
   // Unified data fetcher with proper validation
   const fetchData = async (url, validator) => {

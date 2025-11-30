@@ -2,14 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSave, FaArrowLeft, FaUserPlus, FaEnvelope, FaLock, FaMapMarkerAlt, FaCity, FaGlobe } from 'react-icons/fa';
 import { motion } from 'framer-motion';
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
+import api from '../api/axios';
 
 export default function AdminCreateUserPage() {
   const navigate = useNavigate();

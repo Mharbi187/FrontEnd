@@ -2,15 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { motion } from 'framer-motion';
-import axios from 'axios';
-
-// Configure axios instance
-const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
+import api from '../api/axios';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
