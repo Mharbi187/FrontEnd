@@ -113,8 +113,6 @@ const Deliveries = () => {
     }
     return { bg: 'bg-gray-100', text: 'text-gray-800', icon: '📋', label: status || 'Inconnu', progress: 0 };
   };
-    return { bg: 'bg-gray-100', text: 'text-gray-800', icon: '📋', label: status, progress: 0 };
-  };
 
   // Stats
   const stats = {
