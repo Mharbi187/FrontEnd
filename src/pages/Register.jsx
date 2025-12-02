@@ -221,6 +221,7 @@ export default function Register() {
                     id="prenom"
                     name="prenom"
                     type="text"
+                    autoComplete="given-name"
                     required
                     value={formData.prenom}
                     onChange={handleChange}
@@ -248,6 +249,7 @@ export default function Register() {
                     id="nom"
                     name="nom"
                     type="text"
+                    autoComplete="family-name"
                     required
                     value={formData.nom}
                     onChange={handleChange}
@@ -304,6 +306,7 @@ export default function Register() {
                   id="adresse"
                   name="adresse"
                   type="text"
+                  autoComplete="street-address"
                   required
                   value={formData.adresse}
                   onChange={handleChange}
