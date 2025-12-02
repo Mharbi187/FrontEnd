@@ -35,8 +35,49 @@ const Deliveries = () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await api.get('/livraisons/mes-livraisons');
-      setDeliveries(extractList(res));
+      
+      // Try to get livraisons first, then fall back to commandes
+      let data = [];
+      
+      try {
+        const livraisonsRes = await api.get('/livraisons/mes-livraisons');
+        data = extractList(livraisonsRes);
+      } catch (e) {
+        // If livraisons fails, it's okay - we'll try commandes
+      }
+      
+      // Also get commandes (orders) that have shipping status
+      try {
+        const commandesRes = await api.get('/commandes/mes-commandes');
+        const commandes = extractList(commandesRes);
+        
+        // Transform commandes to delivery format
+        const commandeDeliveries = commandes
+          .filter(c => c.statut && c.statut !== 'En attente') // Only orders that have been processed
+          .map(c => ({
+            _id: c._id,
+            id: c._id,
+            statut: c.statut || 'En préparation',
+            status: c.statut || 'En préparation',
+            adresse: c.adresseLivraison || c.adresse || '-',
+            address: c.adresseLivraison || c.adresse || '-',
+            date: c.updatedAt || c.createdAt,
+            createdAt: c.createdAt,
+            updatedAt: c.updatedAt,
+            montant: c.montantTotal || c.montant || 0,
+            transporteur: 'LIVRINI Express',
+            commande: c
+          }));
+        
+        // Merge and deduplicate by ID
+        const existingIds = new Set(data.map(d => d._id?.toString()));
+        const newDeliveries = commandeDeliveries.filter(d => !existingIds.has(d._id?.toString()));
+        data = [...data, ...newDeliveries];
+      } catch (e) {
+        // Commandes fetch failed
+      }
+      
+      setDeliveries(data);
     } catch (e) {
       setError(e.response?.data?.message || 'Impossible de charger vos livraisons');
     } finally {
