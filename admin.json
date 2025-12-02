@@ -1,0 +1,7 @@
+﻿{
+    "email":  "admin@livrini.com",
+    "nom":  "Admin",
+    "motdepasse":  "Admin123!",
+    "adminSecret":  "YourSuperSecretAdminKey",
+    "prenom":  "Livrini"
+}

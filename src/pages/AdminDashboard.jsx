@@ -295,12 +295,13 @@ export default function AdminDashboard() {
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
       const res = await api.put(`/commandes/${orderId}`, { status: newStatus }, { headers: getAuthHeaders() });
-      // optimistic update (or use returned order)
-      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)));
+      // Refresh orders after update to get the latest data
+      await fetchOrders();
+      alert(`Statut mis à jour: ${newStatus}`);
       return res.data;
     } catch (err) {
       console.error("update order status error:", err);
-      alert("Failed to update status");
+      alert("Failed to update status: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -593,51 +594,68 @@ export default function AdminDashboard() {
           {activeTab === "orders" && (
             <div>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">Orders & Deliveries</h2>
+                <h2 className="text-xl font-semibold text-gray-800">Commandes & Livraisons</h2>
                 <div className="flex items-center space-x-2">
-                  <button onClick={fetchOrders} className="px-3 py-2 border rounded-md text-sm">Refresh</button>
+                  <button onClick={fetchOrders} className="px-3 py-2 border rounded-md text-sm hover:bg-gray-50">🔄 Rafraîchir</button>
                 </div>
               </div>
 
-              {orders.length === 0 && <p className="text-sm text-gray-500">No orders found.</p>}
+              {orders.length === 0 && <p className="text-sm text-gray-500">Aucune commande trouvée.</p>}
 
               <div className="space-y-4">
-                {orders.map((order) => (
-                  <div key={order.id ?? order._id} className="border rounded-xl p-4 hover:shadow-lg transition-shadow bg-white">
-                    <div className="flex justify-between items-center">
+                {orders.map((order) => {
+                  const orderId = order._id || order.id;
+                  const orderNum = order.numeroCommande || `#${orderId?.slice(-8)}`;
+                  const status = order.statutCommande || order.status || 'en_attente';
+                  const total = order.montantTotal || order.total || 0;
+                  const date = order.dateCommande || order.createdAt || order.date;
+                  const address = order.adresseLivraison || order.address || '-';
+                  
+                  // Status display mapping
+                  const statusDisplay = {
+                    'en_attente': { label: 'En attente', bg: 'bg-yellow-100', text: 'text-yellow-800' },
+                    'confirmee': { label: 'Confirmée', bg: 'bg-blue-100', text: 'text-blue-800' },
+                    'en_preparation': { label: 'En préparation', bg: 'bg-orange-100', text: 'text-orange-800' },
+                    'expediee': { label: 'Expédiée', bg: 'bg-purple-100', text: 'text-purple-800' },
+                    'livree': { label: 'Livrée', bg: 'bg-emerald-100', text: 'text-emerald-800' },
+                    'annulee': { label: 'Annulée', bg: 'bg-red-100', text: 'text-red-800' },
+                  };
+                  const statusInfo = statusDisplay[status] || { label: status, bg: 'bg-gray-100', text: 'text-gray-800' };
+                  
+                  return (
+                  <div key={orderId} className="border rounded-xl p-4 hover:shadow-lg transition-shadow bg-white">
+                    <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-medium">Order #{order.id ?? order._id} — ${Number(order.total ?? 0).toFixed(2)}</h3>
-                        <p className="text-sm text-gray-600">Customer: {order.customer}</p>
-                        <p className="text-sm text-gray-600">Date: {order.date}</p>
+                        <h3 className="font-medium text-lg">Commande {orderNum}</h3>
+                        <p className="text-sm text-gray-600">💰 Total: {Number(total).toFixed(2)} TND</p>
+                        <p className="text-sm text-gray-600">📍 {typeof address === 'object' ? `${address.rue || ''}, ${address.ville || ''}` : address}</p>
+                        <p className="text-sm text-gray-500">📅 {date ? new Date(date).toLocaleDateString('fr-FR') : '-'}</p>
                       </div>
-                      <div className="flex items-center">
-                        <span className={`px-3 py-1 rounded-full text-sm ${order.status === "Delivered" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-                          {order.status}
+                      <div className="flex flex-col items-end gap-2">
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusInfo.bg} ${statusInfo.text}`}>
+                          {statusInfo.label}
                         </span>
-                        <button onClick={() => navigate(`/admin/orders/${order.id ?? order._id}`)} className="ml-4 flex items-center text-sm text-emerald-600 hover:text-emerald-800">
-                          <FiFileText className="mr-1" /> Details
-                        </button>
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-3 border-t flex justify-between items-center">
-                      <div className="flex items-center space-x-2">
-                        {order.status !== "Delivered" && (
+                    <div className="mt-4 pt-3 border-t flex flex-wrap justify-between items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {status !== "livree" && (
                           <>
-                            <button onClick={() => handleUpdateOrderStatus(order.id ?? order._id, "Processing")} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-lg">Set Processing</button>
-                            <button onClick={() => handleUpdateOrderStatus(order.id ?? order._id, "Shipped")} className="px-3 py-1 bg-amber-100 text-amber-800 rounded-lg">Set Shipped</button>
-                            <button onClick={() => handleUpdateOrderStatus(order.id ?? order._id, "Delivered")} className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-lg">Mark Delivered</button>
+                            <button onClick={() => handleUpdateOrderStatus(orderId, "Confirmed")} className="px-3 py-1.5 bg-blue-100 text-blue-800 rounded-lg text-sm hover:bg-blue-200 transition-colors">✓ Confirmer</button>
+                            <button onClick={() => handleUpdateOrderStatus(orderId, "Processing")} className="px-3 py-1.5 bg-orange-100 text-orange-800 rounded-lg text-sm hover:bg-orange-200 transition-colors">📦 Préparer</button>
+                            <button onClick={() => handleUpdateOrderStatus(orderId, "Shipped")} className="px-3 py-1.5 bg-purple-100 text-purple-800 rounded-lg text-sm hover:bg-purple-200 transition-colors">🚚 Expédier</button>
+                            <button onClick={() => handleUpdateOrderStatus(orderId, "Delivered")} className="px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-lg text-sm hover:bg-emerald-200 transition-colors">✅ Livrée</button>
                           </>
                         )}
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <button onClick={() => navigate(`/admin/orders/${order.id ?? order._id}/edit`)} className="flex items-center px-3 py-1 border rounded-lg">Edit</button>
-                        <button onClick={() => api.delete(`/admin/orders/${order.id ?? order._id}`, { headers: getAuthHeaders() }).then(() => setOrders((p) => p.filter(o => (o.id ?? o._id) !== (order.id ?? order._id)))).catch(() => alert("Failed to delete"))} className="flex items-center px-3 py-1 bg-red-600 text-white rounded-lg">Delete</button>
+                        {status !== "annulee" && status !== "livree" && (
+                          <button onClick={() => handleUpdateOrderStatus(orderId, "Cancelled")} className="px-3 py-1.5 bg-red-100 text-red-800 rounded-lg text-sm hover:bg-red-200 transition-colors">❌ Annuler</button>
+                        )}
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
