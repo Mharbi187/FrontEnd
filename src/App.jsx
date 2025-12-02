@@ -8,6 +8,7 @@ import { jwtDecode } from 'jwt-decode';
 const Accueil = lazy(() => import('./pages/Accueil'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const VerifyOTP = lazy(() => import('./pages/VerifyOTP'));
 const Services = lazy(() => import('./pages/Services'));
 const ClientDashboard = lazy(() => import('./pages/ClientDashboard'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
@@ -64,6 +65,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/admin-create-user" element={<AdminCreateUserPage />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/deliveries" element={<Deliveries />} />
           <Route path="/cart" element={<Cart />} />

@@ -76,11 +76,11 @@ export default function Register() {
       const response = await api.post('/users/register', payload);
       
       if (response.data.success) {
-        localStorage.setItem('token', response.data.token);
-        navigate('/login', { 
+        // Redirect to OTP verification page
+        toast.success('Code de vérification envoyé à votre email!');
+        navigate('/verify-otp', { 
           state: { 
-            registrationSuccess: true,
-            email: formData.email
+            email: formData.email.toLowerCase()
           } 
         });
       }
