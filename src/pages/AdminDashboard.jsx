@@ -458,11 +458,11 @@ export default function AdminDashboard() {
         <div className="border-b-2 border-gray-200 bg-white/50 backdrop-blur-sm rounded-t-xl">
           <nav className="-mb-px flex space-x-2 overflow-x-auto">
             {[
-              { id: "users", name: "Users Management", icon: <FiUsers className="mr-2" /> },
-              { id: "categories", name: "Categories", icon: <FiList className="mr-2" /> },
-              { id: "orders", name: "Orders & Deliveries", icon: <FiShoppingCart className="mr-2" /> },
-              { id: "reports", name: "Reports", icon: <FiBarChart2 className="mr-2" /> },
-              { id: "alerts", name: "Stock Alerts", icon: <FiAlertCircle className="mr-2" /> },
+              { id: "users", name: "Gestion Utilisateurs", icon: <FiUsers className="mr-2" /> },
+              { id: "categories", name: "Catégories", icon: <FiList className="mr-2" /> },
+              { id: "orders", name: "Commandes", icon: <FiShoppingCart className="mr-2" /> },
+              { id: "reports", name: "Rapports", icon: <FiBarChart2 className="mr-2" /> },
+              { id: "alerts", name: "Alertes Stock", icon: <FiAlertCircle className="mr-2" /> },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -492,32 +492,32 @@ export default function AdminDashboard() {
           {activeTab === "users" && (
             <div>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">Users Management</h2>
+                <h2 className="text-xl font-semibold text-gray-800">Gestion des Utilisateurs</h2>
                 <div className="flex items-center space-x-2">
                   <button onClick={() => navigate('/admin-create-user')} className="flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 shadow-lg transition-all transform hover:scale-105">
-                    <FiUserPlus className="mr-2" /> Add User
+                    <FiUserPlus className="mr-2" /> Ajouter
                   </button>
-                  <button onClick={fetchUsers} className="px-4 py-2 border-2 border-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all">Refresh</button>
+                  <button onClick={fetchUsers} className="px-4 py-2 border-2 border-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all">Rafraîchir</button>
                 </div>
               </div>
 
-              {loading && <p className="text-sm text-gray-500">Loading...</p>}
+              {loading && <p className="text-sm text-gray-500">Chargement...</p>}
               {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
 
               <div className="overflow-x-auto rounded-xl border border-gray-200">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gradient-to-r from-emerald-50 to-teal-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Nom</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Email</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Role</th>
+                      <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Rôle</th>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {users.length === 0 && (
                       <tr>
-                        <td className="px-6 py-4" colSpan={4}>No users found.</td>
+                        <td className="px-6 py-4" colSpan={4}>Aucun utilisateur trouvé.</td>
                       </tr>
                     )}
                     {users.map((user) => {
@@ -541,10 +541,10 @@ export default function AdminDashboard() {
                           </td>
                           <td className="px-6 py-4 text-sm font-medium">
                             <button onClick={() => navigate(`/admin/users/${uid}/edit`)} className="text-emerald-600 hover:text-emerald-800 mr-4 font-semibold transition-colors">
-                              <FiEdit className="inline mr-1" /> Edit
+                              <FiEdit className="inline mr-1" /> Modifier
                             </button>
                             <button onClick={() => handleDeleteUser(uid)} className="text-red-600 hover:text-red-800 font-semibold transition-colors">
-                              <FiTrash2 className="inline mr-1" /> Delete
+                              <FiTrash2 className="inline mr-1" /> Supprimer
                             </button>
                           </td>
                         </tr>
@@ -560,32 +560,42 @@ export default function AdminDashboard() {
           {activeTab === "categories" && (
             <div>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">Categories Management</h2>
+                <h2 className="text-xl font-semibold text-gray-800">Gestion des Catégories</h2>
                 <div className="flex items-center space-x-2">
                   <button onClick={() => navigate("/admin/categories/add")} className="flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700">
-                    <FiPlus className="mr-2" /> Add Category
+                    <FiPlus className="mr-2" /> Ajouter
                   </button>
-                  <button onClick={fetchCategories} className="px-3 py-2 border rounded-md text-sm">Refresh</button>
+                  <button onClick={fetchCategories} className="px-3 py-2 border rounded-md text-sm">Rafraîchir</button>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {categories.map((category) => (
-                  <motion.div key={category.id ?? category._id} whileHover={{ y: -5 }} className="border rounded-xl p-4 shadow-sm hover:shadow-lg bg-white transition-all">
+                {categories.length === 0 && <p className="text-gray-500">Aucune catégorie trouvée.</p>}
+                {categories.map((category) => {
+                  const catId = category._id || category.id;
+                  const catName = category.nom || category.name || 'Sans nom';
+                  const catDesc = category.description || '';
+                  const catType = category.type || '';
+                  return (
+                  <motion.div key={catId} whileHover={{ y: -5 }} className="border rounded-xl p-4 shadow-sm hover:shadow-lg bg-white transition-all">
                     <div className="flex justify-between items-start">
-                      <h3 className="font-medium text-lg">{category.name}</h3>
-                      <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-lg text-sm">{category.productCount ?? category.count ?? 0} products</span>
+                      <div>
+                        <h3 className="font-medium text-lg text-gray-900">{catName}</h3>
+                        {catDesc && <p className="text-sm text-gray-500 mt-1">{catDesc}</p>}
+                      </div>
+                      {catType && <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-lg text-sm">{catType}</span>}
                     </div>
-                    <div className="mt-4 flex space-x-2">
-                      <button onClick={() => navigate(`/admin/categories/${category.id ?? category._id}/edit`)} className="flex items-center text-sm text-emerald-600 hover:text-emerald-800">
-                        <FiEdit className="mr-1" /> Edit
+                    <div className="mt-4 flex space-x-3">
+                      <button onClick={() => navigate(`/admin/categories/${catId}/edit`)} className="flex items-center text-sm text-emerald-600 hover:text-emerald-800 font-medium">
+                        <FiEdit className="mr-1" /> Modifier
                       </button>
-                      <button onClick={() => handleDeleteCategory(category.id ?? category._id)} className="flex items-center text-sm text-red-600 hover:text-red-800">
-                        <FiTrash2 className="mr-1" /> Delete
+                      <button onClick={() => handleDeleteCategory(catId)} className="flex items-center text-sm text-red-600 hover:text-red-800 font-medium">
+                        <FiTrash2 className="mr-1" /> Supprimer
                       </button>
                     </div>
                   </motion.div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -664,24 +674,24 @@ export default function AdminDashboard() {
           {activeTab === "reports" && (
             <div>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">Generate Reports</h2>
+                <h2 className="text-xl font-semibold text-gray-800">Générer des Rapports</h2>
                 <div className="flex items-center space-x-2 flex-wrap gap-2">
                   <button onClick={() => loadAndShowReport("sales")} className="p-3 border rounded-xl hover:shadow-md bg-white flex items-center transition-all">
-                    <FiShoppingCart className="mr-2 text-emerald-600" /> Sales Report
+                    <FiShoppingCart className="mr-2 text-emerald-600" /> Rapport Ventes
                   </button>
                   <button onClick={() => loadAndShowReport("inventory")} className="p-3 border rounded-xl hover:shadow-md bg-white flex items-center transition-all">
-                    <FiDatabase className="mr-2 text-emerald-600" /> Inventory Report
+                    <FiDatabase className="mr-2 text-emerald-600" /> Rapport Inventaire
                   </button>
                   <button onClick={() => loadAndShowReport("users")} className="p-3 border rounded-xl hover:shadow-md bg-white flex items-center transition-all">
-                    <FiUsers className="mr-2 text-emerald-600" /> Users Report
+                    <FiUsers className="mr-2 text-emerald-600" /> Rapport Utilisateurs
                   </button>
                   <button onClick={() => loadAndShowReport("products")} className="p-3 border rounded-xl hover:shadow-md bg-white flex items-center transition-all">
-                    <FiPackage className="mr-2 text-emerald-600" /> Products Report
+                    <FiPackage className="mr-2 text-emerald-600" /> Rapport Produits
                   </button>
                 </div>
               </div>
 
-              <p className="text-sm text-gray-500 mb-4">Click any report button to fetch the data and automatically export a PDF.</p>
+              <p className="text-sm text-gray-500 mb-4">Cliquez sur un bouton pour générer et télécharger le rapport PDF.</p>
 
               {/* Invisible/hidden area used to render report content for html2canvas */}
               <div style={{ position: "absolute", left: -9999, width: 1200 }} aria-hidden>
@@ -803,33 +813,45 @@ export default function AdminDashboard() {
           {activeTab === "alerts" && (
             <div>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">Stock Alerts</h2>
+                <h2 className="text-xl font-semibold text-gray-800">Alertes de Stock</h2>
                 <div className="flex items-center space-x-2">
                   <button onClick={handleResolveAllAlerts} className="flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700">
-                    <FiCheckCircle className="mr-2" /> Resolve All
+                    <FiCheckCircle className="mr-2" /> Tout Résoudre
                   </button>
-                  <button onClick={fetchStockAlerts} className="px-3 py-2 border rounded-xl text-sm">Refresh</button>
+                  <button onClick={fetchStockAlerts} className="px-3 py-2 border rounded-xl text-sm">Rafraîchir</button>
                 </div>
               </div>
 
               <div className="space-y-4">
-                {stockAlerts.length === 0 && <p className="text-sm text-gray-500">No active alerts.</p>}
-                {stockAlerts.map((alert) => (
-                  <motion.div key={alert.id ?? alert._id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="border-l-4 border-red-500 bg-red-50 p-4 rounded-r-xl flex justify-between items-center">
+                {stockAlerts.length === 0 && <p className="text-sm text-gray-500">Aucune alerte active. 🎉</p>}
+                {stockAlerts.map((alert) => {
+                  const alertId = alert._id || alert.id;
+                  const productName = alert.idProduit?.nom || alert.product || 'Produit inconnu';
+                  const currentStock = alert.idProduit?.quantiteStock ?? alert.currentStock ?? 0;
+                  const threshold = alert.seuilMinimum ?? alert.threshold ?? 0;
+                  const status = alert.statutAlerte || 'Active';
+                  const isResolved = status === 'Résolue';
+                  
+                  return (
+                  <motion.div key={alertId} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className={`border-l-4 ${isResolved ? 'border-emerald-500 bg-emerald-50' : 'border-red-500 bg-red-50'} p-4 rounded-r-xl flex justify-between items-center`}>
                     <div>
-                      <h3 className="font-medium">{alert.product}</h3>
-                      <p className="text-sm">Current stock: <span className="font-semibold">{alert.currentStock}</span> | Threshold: <span className="font-semibold">{alert.threshold}</span></p>
+                      <h3 className="font-medium text-gray-900">{productName}</h3>
+                      <p className="text-sm text-gray-600">Stock actuel: <span className={`font-semibold ${currentStock < threshold ? 'text-red-600' : 'text-emerald-600'}`}>{currentStock}</span> | Seuil: <span className="font-semibold">{threshold}</span></p>
+                      <p className="text-xs text-gray-500 mt-1">Statut: {status}</p>
                     </div>
+                    {!isResolved && (
                     <div className="flex space-x-2">
-                      <button onClick={() => navigate(`/admin/products/${alert.productId ?? alert._id}/edit`)} className="flex items-center px-3 py-1 bg-white text-red-600 rounded-lg hover:bg-red-100">
-                        <FiEdit className="mr-1" /> Update Stock
+                      <button onClick={() => navigate(`/admin/products/${alert.idProduit?._id || alertId}/edit`)} className="flex items-center px-3 py-1.5 bg-white text-red-600 rounded-lg hover:bg-red-100 font-medium text-sm">
+                        <FiEdit className="mr-1" /> Mettre à jour
                       </button>
-                      <button onClick={() => handleResolveAlert(alert.id ?? alert._id)} className="flex items-center px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700">
-                        <FiCheck className="mr-1" /> Resolve
+                      <button onClick={() => handleResolveAlert(alertId)} className="flex items-center px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm">
+                        <FiCheck className="mr-1" /> Résoudre
                       </button>
                     </div>
+                    )}
                   </motion.div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
