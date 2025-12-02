@@ -46,19 +46,18 @@ const Deliveries = () => {
         // If livraisons fails, it's okay - we'll try commandes
       }
       
-      // Also get commandes (orders) that have shipping status
+      // Also get commandes (orders) - show ALL orders
       try {
         const commandesRes = await api.get('/commandes/mes-commandes');
         const commandes = extractList(commandesRes);
         
-        // Transform commandes to delivery format
-        const commandeDeliveries = commandes
-          .filter(c => c.statut && c.statut !== 'En attente') // Only orders that have been processed
-          .map(c => ({
+        // Transform commandes to delivery format - include ALL orders
+        const commandeDeliveries = commandes.map(c => ({
             _id: c._id,
             id: c._id,
-            statut: c.statut || 'En préparation',
-            status: c.statut || 'En préparation',
+            numeroCommande: c.numeroCommande,
+            statut: c.statutCommande || c.statut || 'En Attente',
+            status: c.statutCommande || c.statut || 'En Attente',
             adresse: c.adresseLivraison || c.adresse || '-',
             address: c.adresseLivraison || c.adresse || '-',
             date: c.updatedAt || c.createdAt,
@@ -75,6 +74,7 @@ const Deliveries = () => {
         data = [...data, ...newDeliveries];
       } catch (e) {
         // Commandes fetch failed
+        console.log('Commandes fetch error:', e);
       }
       
       setDeliveries(data);
@@ -95,19 +95,24 @@ const Deliveries = () => {
   });
 
   const getStatusConfig = (status) => {
-    const s = status.toLowerCase();
-    if (s === 'livrée' || s === 'delivered' || s === 'livré') {
+    const s = (status || '').toLowerCase().replace(/_/g, ' ');
+    if (s === 'livrée' || s === 'delivered' || s === 'livré' || s === 'livree') {
       return { bg: 'bg-emerald-100', text: 'text-emerald-800', icon: '✅', label: 'Livrée', progress: 100 };
     }
-    if (s === 'en transit' || s === 'shipped' || s === 'expédiée') {
+    if (s === 'en transit' || s === 'shipped' || s === 'expédiée' || s === 'expediee') {
       return { bg: 'bg-blue-100', text: 'text-blue-800', icon: '🚚', label: 'En transit', progress: 66 };
     }
-    if (s === 'en préparation' || s === 'processing' || s === 'préparation') {
+    if (s === 'en préparation' || s === 'processing' || s === 'préparation' || s === 'en preparation' || s === 'confirmee' || s === 'confirmé') {
       return { bg: 'bg-amber-100', text: 'text-amber-800', icon: '📦', label: 'En préparation', progress: 33 };
     }
-    if (s === 'annulée' || s === 'cancelled') {
+    if (s === 'en attente' || s === 'pending' || s === 'en_attente') {
+      return { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: '⏳', label: 'En attente', progress: 10 };
+    }
+    if (s === 'annulée' || s === 'cancelled' || s === 'annulee') {
       return { bg: 'bg-red-100', text: 'text-red-800', icon: '❌', label: 'Annulée', progress: 0 };
     }
+    return { bg: 'bg-gray-100', text: 'text-gray-800', icon: '📋', label: status || 'Inconnu', progress: 0 };
+  };
     return { bg: 'bg-gray-100', text: 'text-gray-800', icon: '📋', label: status, progress: 0 };
   };
 
