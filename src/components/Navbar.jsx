@@ -62,7 +62,9 @@ const Navbar = () => {
       userName = decoded.name || '';
     }
   } catch (error) {
-    console.error('Error decoding token:', error);
+    // Invalid token - clear it
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   }
 
   const handleLogout = () => {
