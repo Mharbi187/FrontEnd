@@ -21,6 +21,7 @@ import {
 } from "react-icons/fi";
 import { FaUser } from "react-icons/fa";
 import { motion } from "framer-motion";
+import NotificationPanel from "../components/NotificationPanel";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -427,6 +428,9 @@ export default function AdminDashboard() {
         <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Admin Dashboard</h1>
 
         <div className="flex items-center space-x-3">
+          {/* Notifications */}
+          <NotificationPanel userRole="admin" />
+
           {/* Profile shortcut */}
           <button
             onClick={() => navigate("/profile")}

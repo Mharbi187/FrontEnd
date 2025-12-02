@@ -16,6 +16,7 @@ import {
 import { jwtDecode } from 'jwt-decode';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
+import NotificationPanel from '../components/NotificationPanel';
 
 ChartJS.register(
   CategoryScale, LinearScale, PointElement, LineElement,
@@ -350,12 +351,7 @@ export default function FournisseurDashboard() {
               />
             </div>
 
-            <button className="relative p-2 hover:bg-gray-100 rounded-xl">
-              <FaBell size={20} className="text-gray-600" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                {stats.lowStock}
-              </span>
-            </button>
+            <NotificationPanel userRole="fournisseur" />
 
             <button
               onClick={() => { setEditingProduct(null); setProductForm({ nom: '', description: '', prix: '', quantite: '', categorie: '' }); setShowProductModal(true); }}

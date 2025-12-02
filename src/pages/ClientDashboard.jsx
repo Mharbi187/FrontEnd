@@ -19,6 +19,7 @@ import {
 import { jwtDecode } from 'jwt-decode';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
+import NotificationPanel from '../components/NotificationPanel';
 
 // Register Chart.js
 ChartJS.register(
@@ -353,12 +354,7 @@ export default function ClientDashboard() {
             </div>
 
             {/* Notifications */}
-            <button className="relative p-2 hover:bg-gray-100 rounded-xl">
-              <FaBell size={20} className="text-gray-600" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                2
-              </span>
-            </button>
+            <NotificationPanel userRole="client" />
 
             {/* Cart */}
             <Link to="/cart" className="relative p-2 hover:bg-gray-100 rounded-xl">
