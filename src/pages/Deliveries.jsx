@@ -3,6 +3,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 
+// Helper function to format address (handles both string and object)
+const formatAddress = (addr) => {
+  if (!addr) return '-';
+  if (typeof addr === 'string') return addr;
+  if (typeof addr === 'object') {
+    const parts = [addr.rue, addr.ville, addr.codePostal, addr.pays].filter(Boolean);
+    return parts.length > 0 ? parts.join(', ') : '-';
+  }
+  return String(addr);
+};
+
 const Deliveries = () => {
   const [deliveries, setDeliveries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +49,7 @@ const Deliveries = () => {
   const filtered = deliveries.filter((d) => {
     const id = (d.id || d._id || '').toString();
     const status = (d.status || d.statut || '').toString().toLowerCase();
-    const address = (d.adresse || d.address || '').toString().toLowerCase();
+    const address = formatAddress(d.adresse || d.address).toLowerCase();
     return id.includes(query) || status.includes(query.toLowerCase()) || address.includes(query.toLowerCase());
   });
 
@@ -195,7 +206,7 @@ const Deliveries = () => {
               const status = d.status || d.statut || 'Inconnu';
               const statusConfig = getStatusConfig(status);
               const date = d.date || d.updatedAt || d.createdAt || '';
-              const address = d.adresse || d.address || '-';
+              const address = formatAddress(d.adresse || d.address);
               const carrier = d.transporteur || d.carrier || 'LIVRINI Express';
               
               return (
