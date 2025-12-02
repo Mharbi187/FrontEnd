@@ -19,6 +19,7 @@ const AdminCreateUserPage = lazy(() => import('./pages/AdminCreateUserPage'));
 const Orders = lazy(() => import('./pages/Orders'));
 const Deliveries = lazy(() => import('./pages/Deliveries'));
 const Cart = lazy(() => import('./pages/Cart'));
+const Checkout = lazy(() => import('./pages/Checkout'));
 const About = lazy(() => import('./pages/About'));
 
 // Loading fallback component
@@ -69,6 +70,7 @@ function App() {
           <Route path="/orders" element={<Orders />} />
           <Route path="/deliveries" element={<Deliveries />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
 
           {/* Dashboard routes */}
           <Route

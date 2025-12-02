@@ -104,7 +104,7 @@ export default function Cart() {
   const shipping = subtotal > 100 ? 0 : 7;
   const total = subtotal - discountAmount + shipping;
 
-  // Checkout
+  // Checkout - Navigate to checkout page
   const handleCheckout = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -118,32 +118,8 @@ export default function Cart() {
       return;
     }
 
-    setLoading(true);
-    try {
-      // Create order
-      const orderData = {
-        lignesCommande: cartItems.map(item => ({
-          produit: item._id,
-          quantite: item.quantity || 1,
-          prixUnitaire: item.prix
-        })),
-        total: total,
-        statutCommande: 'en_attente'
-      };
-
-      await api.post('/commandes', orderData);
-      
-      // Clear cart
-      setCartItems([]);
-      localStorage.removeItem('cart');
-      
-      toast.success('Commande passée avec succès!');
-      navigate('/client-dashboard');
-    } catch (error) {
-      toast.error('Erreur lors de la commande: ' + (error.response?.data?.message || 'Erreur inconnue'));
-    } finally {
-      setLoading(false);
-    }
+    // Navigate to checkout page with cart data
+    navigate('/checkout');
   };
 
   return (
