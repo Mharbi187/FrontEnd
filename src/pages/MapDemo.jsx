@@ -1,18 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 import { FaArrowLeft, FaTruck, FaMapMarkerAlt, FaPlay, FaPause, FaRedo } from 'react-icons/fa';
-
-// Mapbox token
-mapboxgl.accessToken = 'pk.eyJ1IjoibWhhcmJpMTIzIiwiYSI6ImNtaXA0cmM4NzA4MTQzaHF2amZjc3o1OTMifQ.1hZhsyjSLuVaUzP10sZcpg';
 
 // Tunisia coordinates
 const TUNIS_CENTER = [10.1815, 36.8065];
-const WAREHOUSE = [10.1650, 36.8200]; // Warehouse location
-const DESTINATION = [10.2100, 36.7900]; // Customer location
+const WAREHOUSE = [10.1650, 36.8200];
+const DESTINATION = [10.2100, 36.7900];
 
-// Generate smooth route between two points
+// Generate route
 const generateRoute = (start, end, numPoints = 100) => {
   const route = [];
   for (let i = 0; i <= numPoints; i++) {
@@ -30,61 +25,92 @@ const routeCoordinates = generateRoute(WAREHOUSE, DESTINATION);
 
 export default function MapDemo() {
   const mapContainer = useRef(null);
-  const map = useRef(null);
-  const marker = useRef(null);
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
   const animationRef = useRef(null);
   
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [error, setError] = useState(null);
+  const [mapboxgl, setMapboxgl] = useState(null);
 
-  // Initialize map
+  // Load Mapbox dynamically
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    const loadMapbox = async () => {
+      try {
+        const mapboxModule = await import('mapbox-gl');
+        await import('mapbox-gl/dist/mapbox-gl.css');
+        
+        const mapbox = mapboxModule.default;
+        mapbox.accessToken = 'pk.eyJ1IjoibWhhcmJpMTIzIiwiYSI6ImNtaXA0cmM4NzA4MTQzaHF2amZjc3o1OTMifQ.1hZhsyjSLuVaUzP10sZcpg';
+        
+        setMapboxgl(mapbox);
+      } catch (err) {
+        console.error('Failed to load Mapbox:', err);
+        setError('Impossible de charger Mapbox. Veuillez désactiver votre bloqueur de publicités.');
+      }
+    };
+    
+    loadMapbox();
+  }, []);
+
+  // Initialize map when mapboxgl is loaded
+  useEffect(() => {
+    if (!mapboxgl || !mapContainer.current || mapRef.current) return;
 
     try {
-      map.current = new mapboxgl.Map({
+      console.log('Initializing map...');
+      
+      const map = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/streets-v12',
         center: TUNIS_CENTER,
         zoom: 13,
-        pitch: 45,
-        bearing: -20,
-        antialias: true
+        pitch: 50,
+        bearing: -20
       });
 
-      map.current.on('error', (e) => {
+      mapRef.current = map;
+
+      map.on('error', (e) => {
         console.error('Map error:', e);
-        setError('Erreur de chargement de la carte');
+        setError(`Erreur carte: ${e.error?.message || 'Inconnue'}`);
       });
 
-      map.current.on('load', () => {
+      map.on('load', () => {
+        console.log('Map loaded successfully!');
         setMapLoaded(true);
 
         // Add 3D buildings
-        const layers = map.current.getStyle().layers;
-        const labelLayerId = layers.find(
-          (layer) => layer.type === 'symbol' && layer.layout['text-field']
-        )?.id;
+        try {
+          const layers = map.getStyle().layers;
+          const labelLayerId = layers?.find(
+            (layer) => layer.type === 'symbol' && layer.layout?.['text-field']
+          )?.id;
 
-        map.current.addLayer({
-          id: '3d-buildings',
-          source: 'composite',
-          'source-layer': 'building',
-          filter: ['==', 'extrude', 'true'],
-          type: 'fill-extrusion',
-          minzoom: 12,
-          paint: {
-            'fill-extrusion-color': '#aaa',
-            'fill-extrusion-height': ['get', 'height'],
-            'fill-extrusion-base': ['get', 'min_height'],
-            'fill-extrusion-opacity': 0.6
+          if (labelLayerId) {
+            map.addLayer({
+              id: '3d-buildings',
+              source: 'composite',
+              'source-layer': 'building',
+              filter: ['==', 'extrude', 'true'],
+              type: 'fill-extrusion',
+              minzoom: 12,
+              paint: {
+                'fill-extrusion-color': '#aaa',
+                'fill-extrusion-height': ['get', 'height'],
+                'fill-extrusion-base': ['get', 'min_height'],
+                'fill-extrusion-opacity': 0.7
+              }
+            }, labelLayerId);
           }
-        }, labelLayerId);
+        } catch (e) {
+          console.log('3D buildings not available:', e);
+        }
 
-        // Add route source
-        map.current.addSource('route', {
+        // Add route
+        map.addSource('route', {
           type: 'geojson',
           data: {
             type: 'Feature',
@@ -93,31 +119,19 @@ export default function MapDemo() {
           }
         });
 
-        // Route shadow
-        map.current.addLayer({
-          id: 'route-shadow',
-          type: 'line',
-          source: 'route',
-          paint: {
-            'line-color': '#000',
-            'line-width': 10,
-            'line-opacity': 0.15
-          }
-        });
-
-        // Main route
-        map.current.addLayer({
+        map.addLayer({
           id: 'route-line',
           type: 'line',
           source: 'route',
           paint: {
             'line-color': '#10b981',
-            'line-width': 6
+            'line-width': 6,
+            'line-opacity': 0.8
           }
         });
 
-        // Progress line source
-        map.current.addSource('progress', {
+        // Progress line
+        map.addSource('progress', {
           type: 'geojson',
           data: {
             type: 'Feature',
@@ -126,7 +140,7 @@ export default function MapDemo() {
           }
         });
 
-        map.current.addLayer({
+        map.addLayer({
           id: 'progress-line',
           type: 'line',
           source: 'progress',
@@ -139,29 +153,26 @@ export default function MapDemo() {
         // Warehouse marker
         new mapboxgl.Marker({ color: '#f59e0b' })
           .setLngLat(WAREHOUSE)
-          .setPopup(new mapboxgl.Popup().setHTML('<strong>🏭 Entrepôt LIVRINI - Tunis</strong>'))
-          .addTo(map.current);
+          .setPopup(new mapboxgl.Popup().setHTML('<b>🏭 Entrepôt LIVRINI</b>'))
+          .addTo(map);
 
         // Destination marker
         new mapboxgl.Marker({ color: '#10b981' })
           .setLngLat(DESTINATION)
-          .setPopup(new mapboxgl.Popup().setHTML('<strong>📍 Destination Client</strong>'))
-          .addTo(map.current);
+          .setPopup(new mapboxgl.Popup().setHTML('<b>📍 Client</b>'))
+          .addTo(map);
 
         // Truck marker
         const truckEl = document.createElement('div');
+        truckEl.className = 'truck-marker';
         truckEl.innerHTML = `
           <div style="
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            width: 50px; height: 50px;
+            background: linear-gradient(135deg, #10b981, #059669);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5);
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(16,185,129,0.5);
             border: 3px solid white;
-            animation: pulse 2s infinite;
           ">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
               <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
@@ -169,39 +180,42 @@ export default function MapDemo() {
           </div>
         `;
 
-        marker.current = new mapboxgl.Marker({ element: truckEl })
+        markerRef.current = new mapboxgl.Marker({ element: truckEl })
           .setLngLat(routeCoordinates[0])
-          .addTo(map.current);
+          .addTo(map);
 
-        // Fit bounds
+        // Fit to route
         const bounds = new mapboxgl.LngLatBounds();
         routeCoordinates.forEach(coord => bounds.extend(coord));
-        map.current.fitBounds(bounds, { padding: 100 });
+        map.fitBounds(bounds, { padding: 80 });
+
+        // Auto-start animation
+        setTimeout(() => setIsPlaying(true), 1000);
       });
 
       // Navigation controls
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     } catch (err) {
       console.error('Map init error:', err);
-      setError('Erreur d\'initialisation de la carte');
+      setError(`Erreur: ${err.message}`);
     }
 
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
       }
     };
-  }, []);
+  }, [mapboxgl]);
 
   // Animation
   useEffect(() => {
-    if (!mapLoaded || !isPlaying) return;
+    if (!mapLoaded || !isPlaying || !mapRef.current) return;
 
     let startTime = null;
-    const duration = 30000; // 30 seconds
+    const duration = 30000;
 
     const animate = (timestamp) => {
       if (!startTime) startTime = timestamp;
@@ -213,13 +227,14 @@ export default function MapDemo() {
       const pointIndex = Math.floor(t * (routeCoordinates.length - 1));
       const currentPoint = routeCoordinates[pointIndex];
 
-      if (marker.current && currentPoint) {
-        marker.current.setLngLat(currentPoint);
+      if (markerRef.current && currentPoint) {
+        markerRef.current.setLngLat(currentPoint);
       }
 
       // Update progress line
-      if (map.current?.getSource('progress')) {
-        map.current.getSource('progress').setData({
+      const progressSource = mapRef.current?.getSource('progress');
+      if (progressSource) {
+        progressSource.setData({
           type: 'Feature',
           properties: {},
           geometry: {
@@ -243,15 +258,17 @@ export default function MapDemo() {
 
   const resetAnimation = () => {
     setProgress(0);
-    if (marker.current) marker.current.setLngLat(routeCoordinates[0]);
-    if (map.current?.getSource('progress')) {
-      map.current.getSource('progress').setData({
+    setIsPlaying(false);
+    if (markerRef.current) markerRef.current.setLngLat(routeCoordinates[0]);
+    const progressSource = mapRef.current?.getSource('progress');
+    if (progressSource) {
+      progressSource.setData({
         type: 'Feature',
         properties: {},
         geometry: { type: 'LineString', coordinates: [] }
       });
     }
-    setIsPlaying(true);
+    setTimeout(() => setIsPlaying(true), 100);
   };
 
   return (
