@@ -136,12 +136,23 @@ export default function DeliveryTracker() {
     fetchDelivery();
   }, [id]);
 
-  // Initialize Leaflet map
+  // Initialize Leaflet map - wait for loading to complete
   useEffect(() => {
+    // Don't initialize while still loading
+    if (loading) {
+      console.log('Still loading delivery data...');
+      return;
+    }
+
     // Wait for DOM to be ready
     const timer = setTimeout(() => {
-      if (!mapRef.current || mapInstanceRef.current) {
-        console.log('Map ref not ready or already initialized');
+      if (!mapRef.current) {
+        console.log('Map container ref not available');
+        return;
+      }
+      
+      if (mapInstanceRef.current) {
+        console.log('Map already initialized');
         return;
       }
 
@@ -246,7 +257,7 @@ export default function DeliveryTracker() {
       console.error('Error initializing map:', error);
       setMapError(error.message);
     }
-    }, 100); // Small delay to ensure DOM is ready
+    }, 200); // Small delay to ensure DOM is ready
 
     return () => {
       clearTimeout(timer);
@@ -256,7 +267,7 @@ export default function DeliveryTracker() {
         mapInstanceRef.current = null;
       }
     };
-  }, []);
+  }, [loading]); // Re-run when loading completes
 
   // Animation
   useEffect(() => {
