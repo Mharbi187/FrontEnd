@@ -316,7 +316,18 @@ export default function MapDemo() {
             </div>
           </div>
         ) : (
-          <div ref={mapContainer} className="absolute inset-0" />
+          <div 
+            ref={mapContainer} 
+            style={{ 
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              right: 0, 
+              bottom: 0,
+              width: '100%',
+              height: '100%'
+            }} 
+          />
         )}
 
         {/* Loading */}
@@ -382,6 +393,18 @@ export default function MapDemo() {
         @keyframes pulse {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.1); }
+        }
+        .mapboxgl-map {
+          width: 100% !important;
+          height: 100% !important;
+        }
+        .mapboxgl-canvas {
+          width: 100% !important;
+          height: 100% !important;
+        }
+        .mapboxgl-canvas-container {
+          width: 100% !important;
+          height: 100% !important;
         }
       `}</style>
     </div>

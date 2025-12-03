@@ -7,6 +7,10 @@ export default defineConfig({
     // Use esbuild for minification (faster and bundled with Vite)
     minify: 'esbuild',
     target: 'es2015',
+    // Disable modulepreload polyfill to prevent preload warnings
+    modulePreload: {
+      polyfill: false,
+    },
     // Code splitting
     rollupOptions: {
       output: {
