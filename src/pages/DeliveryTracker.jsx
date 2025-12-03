@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import {
   FaTruck, FaMapMarkerAlt, FaPhone, FaBox, FaArrowLeft,
   FaClock, FaCheckCircle, FaSpinner, FaRoute, FaUser,
@@ -8,6 +10,14 @@ import {
 } from 'react-icons/fa';
 import { FiPackage, FiNavigation } from 'react-icons/fi';
 import api from '../api/axios';
+
+// Fix Leaflet default marker icons
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
 
 // Helper function to format address
 const formatAddress = (address) => {
@@ -62,7 +72,6 @@ export default function DeliveryTracker() {
   const polylineRef = useRef(null);
   const progressLineRef = useRef(null);
   const animationRef = useRef(null);
-  const leafletRef = useRef(null);
   
   const [delivery, setDelivery] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -71,6 +80,7 @@ export default function DeliveryTracker() {
   const [estimatedTime, setEstimatedTime] = useState(25);
   const [isPlaying, setIsPlaying] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+  const [mapError, setMapError] = useState(null);
 
   // Fetch delivery data
   useEffect(() => {
@@ -130,143 +140,101 @@ export default function DeliveryTracker() {
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    const initMap = async () => {
-      try {
-        // Dynamic import of Leaflet
-        const L = await import('leaflet');
-        await import('leaflet/dist/leaflet.css');
-        leafletRef.current = L.default || L;
-        
-        // Fix default marker icon issue
-        delete leafletRef.current.Icon.Default.prototype._getIconUrl;
-        leafletRef.current.Icon.Default.mergeOptions({
-          iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-          iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-        });
+    try {
+      // Create map
+      const map = L.map(mapRef.current, {
+        center: [(WAREHOUSE[0] + DESTINATION[0]) / 2, (WAREHOUSE[1] + DESTINATION[1]) / 2],
+        zoom: 13,
+        zoomControl: true
+      });
 
-        // Create map
-        const map = leafletRef.current.map(mapRef.current, {
-          center: [(WAREHOUSE[0] + DESTINATION[0]) / 2, (WAREHOUSE[1] + DESTINATION[1]) / 2],
-          zoom: 13,
-          zoomControl: true
-        });
+      mapInstanceRef.current = map;
 
-        mapInstanceRef.current = map;
+      // Add tile layer (OpenStreetMap)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map);
 
-        // Add tile layer (OpenStreetMap)
-        leafletRef.current.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors',
-          maxZoom: 19
-        }).addTo(map);
+      // Custom truck icon
+      const truckIcon = L.divIcon({
+        html: `
+          <div style="
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5);
+            border: 3px solid white;
+          ">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+              <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+            </svg>
+          </div>
+        `,
+        className: 'truck-marker',
+        iconSize: [50, 50],
+        iconAnchor: [25, 25]
+      });
 
-        // Custom truck icon
-        const truckIcon = leafletRef.current.divIcon({
-          html: `
-            <div style="
-              width: 50px;
-              height: 50px;
-              background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5);
-              border: 3px solid white;
-            ">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-                <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-              </svg>
-            </div>
-          `,
-          className: 'truck-marker',
-          iconSize: [50, 50],
-          iconAnchor: [25, 25]
-        });
+      // Warehouse icon
+      const warehouseIcon = L.divIcon({
+        html: `<div style="width:40px;height:40px;background:#f59e0b;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.3);font-size:20px;">🏭</div>`,
+        className: 'warehouse-marker',
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+      });
 
-        // Warehouse icon
-        const warehouseIcon = leafletRef.current.divIcon({
-          html: `
-            <div style="
-              width: 40px;
-              height: 40px;
-              background: #f59e0b;
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border: 3px solid white;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-              font-size: 20px;
-            ">🏭</div>
-          `,
-          className: 'warehouse-marker',
-          iconSize: [40, 40],
-          iconAnchor: [20, 20]
-        });
+      // Destination icon
+      const destinationIcon = L.divIcon({
+        html: `<div style="width:40px;height:40px;background:#10b981;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.3);font-size:20px;">📍</div>`,
+        className: 'destination-marker',
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+      });
 
-        // Destination icon
-        const destinationIcon = leafletRef.current.divIcon({
-          html: `
-            <div style="
-              width: 40px;
-              height: 40px;
-              background: #10b981;
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border: 3px solid white;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-              font-size: 20px;
-            ">📍</div>
-          `,
-          className: 'destination-marker',
-          iconSize: [40, 40],
-          iconAnchor: [20, 20]
-        });
+      // Add route polyline
+      polylineRef.current = L.polyline(routeCoordinates, {
+        color: '#10b981',
+        weight: 6,
+        opacity: 0.7
+      }).addTo(map);
 
-        // Add route polyline
-        polylineRef.current = leafletRef.current.polyline(routeCoordinates, {
-          color: '#10b981',
-          weight: 6,
-          opacity: 0.7
-        }).addTo(map);
+      // Add progress polyline (empty initially)
+      progressLineRef.current = L.polyline([], {
+        color: '#059669',
+        weight: 8,
+        opacity: 1
+      }).addTo(map);
 
-        // Add progress polyline (empty initially)
-        progressLineRef.current = leafletRef.current.polyline([], {
-          color: '#059669',
-          weight: 8,
-          opacity: 1
-        }).addTo(map);
+      // Add markers
+      L.marker(WAREHOUSE, { icon: warehouseIcon })
+        .addTo(map)
+        .bindPopup('<b>🏭 Entrepôt LIVRINI</b>');
 
-        // Add markers
-        leafletRef.current.marker(WAREHOUSE, { icon: warehouseIcon })
-          .addTo(map)
-          .bindPopup('<b>🏭 Entrepôt LIVRINI</b>');
+      L.marker(DESTINATION, { icon: destinationIcon })
+        .addTo(map)
+        .bindPopup('<b>📍 Destination Client</b>');
 
-        leafletRef.current.marker(DESTINATION, { icon: destinationIcon })
-          .addTo(map)
-          .bindPopup('<b>📍 Destination Client</b>');
+      // Add truck marker
+      markerRef.current = L.marker(routeCoordinates[0], { icon: truckIcon })
+        .addTo(map);
 
-        // Add truck marker
-        markerRef.current = leafletRef.current.marker(routeCoordinates[0], { icon: truckIcon })
-          .addTo(map);
+      // Fit bounds to show entire route
+      map.fitBounds(polylineRef.current.getBounds(), { padding: [50, 50] });
 
-        // Fit bounds to show entire route
-        map.fitBounds(polylineRef.current.getBounds(), { padding: [50, 50] });
+      setMapReady(true);
+      
+      // Auto-start animation after a short delay
+      setTimeout(() => setIsPlaying(true), 1500);
 
-        setMapReady(true);
-        
-        // Auto-start animation after a short delay
-        setTimeout(() => setIsPlaying(true), 1500);
-
-      } catch (error) {
-        console.error('Error initializing map:', error);
-      }
-    };
-
-    initMap();
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      setMapError(error.message);
+    }
 
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
@@ -403,11 +371,22 @@ export default function DeliveryTracker() {
           />
           
           {/* Loading overlay */}
-          {!mapReady && (
+          {!mapReady && !mapError && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
               <div className="text-center">
                 <div className="w-16 h-16 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto mb-4"></div>
                 <p className="text-gray-600">Chargement de la carte...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error overlay */}
+          {mapError && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+              <div className="text-center p-6">
+                <FaMapMarkerAlt className="text-5xl text-red-400 mx-auto mb-4" />
+                <p className="text-gray-700 font-medium mb-2">Erreur de chargement</p>
+                <p className="text-gray-500 text-sm">{mapError}</p>
               </div>
             </div>
           )}
