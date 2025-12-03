@@ -88,23 +88,51 @@ export default function DeliveryTracker() {
       setLoading(true);
       try {
         if (id && id !== 'demo') {
-          // Fetch real delivery data
-          const response = await api.get(`/livraisons/${id}`);
-          const data = response.data?.data || response.data;
-          setDelivery(data);
+          let data = null;
           
-          // Set current step based on actual status
-          const statusMap = {
-            'en_attente': 0,
-            'confirmee': 1,
-            'en_preparation': 2,
-            'expediee': 3,
-            'en_cours': 3,
-            'en_transit': 3,
-            'livree': 4,
-            'annulee': 0
-          };
-          setCurrentStep(statusMap[data?.statut] || 3);
+          // Try livraisons first
+          try {
+            const response = await api.get(`/livraisons/${id}`);
+            data = response.data?.data || response.data;
+          } catch (e) {
+            // If livraisons fails, try commandes
+            try {
+              const response = await api.get(`/commandes/${id}`);
+              const commande = response.data?.data || response.data;
+              // Transform commande to delivery format
+              data = {
+                _id: commande._id,
+                numeroLivraison: commande.numeroCommande || `LIV-${commande._id?.slice(-6)}`,
+                statut: commande.statutCommande || commande.statut || 'en_cours',
+                adresseLivraison: commande.adresseLivraison || commande.adresse || '',
+                dateEstimee: commande.dateLivraisonEstimee || new Date(Date.now() + 3 * 24 * 60 * 60000).toISOString(),
+                livreur: commande.livreur || { nom: 'LIVRINI Express', telephone: '+216 98 765 432' },
+                commande: commande
+              };
+            } catch (e2) {
+              console.error('Both endpoints failed:', e, e2);
+            }
+          }
+          
+          if (data) {
+            setDelivery(data);
+            
+            // Set current step based on actual status
+            const statusMap = {
+              'en_attente': 0,
+              'confirmee': 1,
+              'en_preparation': 2,
+              'expediee': 3,
+              'en_cours': 3,
+              'en_transit': 3,
+              'livree': 4,
+              'annulee': 0
+            };
+            const status = (data.statut || '').toLowerCase().replace(/[éè]/g, 'e').replace(/ /g, '_');
+            setCurrentStep(statusMap[status] || 3);
+          } else {
+            throw new Error('No data found');
+          }
         } else {
           // Demo mode - use sample data
           setDelivery({
@@ -119,15 +147,15 @@ export default function DeliveryTracker() {
         }
       } catch (error) {
         console.error('Error fetching delivery:', error);
-        // On error, show demo data with error message
+        // On error, show demo data
         setDelivery({
           _id: id || 'error',
           numeroLivraison: id ? `LIV-${id.slice(-6).toUpperCase()}` : 'LIV-DEMO',
           statut: 'en_cours',
-          adresseLivraison: '123 Avenue Habib Bourguiba, Tunis',
+          adresseLivraison: 'Tunis, Tunisie',
           dateEstimee: new Date(Date.now() + 25 * 60000).toISOString(),
-          livreur: { nom: 'Ahmed Ben Ali', telephone: '+216 98 765 432' },
-          commande: { numeroCommande: 'CMD-2024-001', montantTotal: 156.50 }
+          livreur: { nom: 'LIVRINI Express', telephone: '+216 98 765 432' },
+          commande: { numeroCommande: 'CMD-2024-001', montantTotal: 0 }
         });
       } finally {
         setLoading(false);

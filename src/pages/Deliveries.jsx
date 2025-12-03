@@ -5,13 +5,16 @@ import api from '../api/axios';
 
 // Helper function to format address (handles both string and object)
 const formatAddress = (addr) => {
-  if (!addr) return '-';
-  if (typeof addr === 'string') return addr;
+  if (!addr) return 'Adresse non spécifiée';
+  if (typeof addr === 'string') {
+    const trimmed = addr.trim();
+    return trimmed.length > 0 ? trimmed : 'Adresse non spécifiée';
+  }
   if (typeof addr === 'object') {
     const parts = [addr.rue, addr.ville, addr.codePostal, addr.pays].filter(Boolean);
-    return parts.length > 0 ? parts.join(', ') : '-';
+    return parts.length > 0 ? parts.join(', ') : 'Adresse non spécifiée';
   }
-  return String(addr);
+  return String(addr) || 'Adresse non spécifiée';
 };
 
 const Deliveries = () => {
@@ -53,21 +56,26 @@ const Deliveries = () => {
         const commandes = extractList(commandesRes);
         
         // Transform commandes to delivery format - include ALL orders
-        const commandeDeliveries = commandes.map(c => ({
+        const commandeDeliveries = commandes.map(c => {
+          // Extract address - check multiple possible fields
+          const addr = c.adresseLivraison || c.adresse || c.shippingAddress || '';
+          return {
             _id: c._id,
             id: c._id,
             numeroCommande: c.numeroCommande,
             statut: c.statutCommande || c.statut || 'En Attente',
             status: c.statutCommande || c.statut || 'En Attente',
-            adresse: c.adresseLivraison || c.adresse || '-',
-            address: c.adresseLivraison || c.adresse || '-',
+            adresse: addr,
+            address: addr,
+            adresseLivraison: addr,
             date: c.updatedAt || c.createdAt,
             createdAt: c.createdAt,
             updatedAt: c.updatedAt,
             montant: c.montantTotal || c.montant || 0,
             transporteur: 'LIVRINI Express',
             commande: c
-          }));
+          };
+        });
         
         // Merge and deduplicate by ID
         const existingIds = new Set(data.map(d => d._id?.toString()));
