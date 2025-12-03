@@ -138,23 +138,33 @@ export default function DeliveryTracker() {
 
   // Initialize Leaflet map
   useEffect(() => {
-    if (!mapRef.current || mapInstanceRef.current) return;
+    // Wait for DOM to be ready
+    const timer = setTimeout(() => {
+      if (!mapRef.current || mapInstanceRef.current) {
+        console.log('Map ref not ready or already initialized');
+        return;
+      }
 
-    try {
-      // Create map
-      const map = L.map(mapRef.current, {
-        center: [(WAREHOUSE[0] + DESTINATION[0]) / 2, (WAREHOUSE[1] + DESTINATION[1]) / 2],
-        zoom: 13,
-        zoomControl: true
-      });
+      console.log('Initializing Leaflet map...');
 
-      mapInstanceRef.current = map;
+      try {
+        // Create map
+        const map = L.map(mapRef.current, {
+          center: [(WAREHOUSE[0] + DESTINATION[0]) / 2, (WAREHOUSE[1] + DESTINATION[1]) / 2],
+          zoom: 13,
+          zoomControl: true
+        });
 
-      // Add tile layer (OpenStreetMap)
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19
-      }).addTo(map);
+        console.log('Map created');
+        mapInstanceRef.current = map;
+
+        // Add tile layer (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors',
+          maxZoom: 19
+        }).addTo(map);
+
+        console.log('Tile layer added');
 
       // Custom truck icon
       const truckIcon = L.divIcon({
@@ -226,6 +236,7 @@ export default function DeliveryTracker() {
       // Fit bounds to show entire route
       map.fitBounds(polylineRef.current.getBounds(), { padding: [50, 50] });
 
+      console.log('Map ready!');
       setMapReady(true);
       
       // Auto-start animation after a short delay
@@ -235,8 +246,10 @@ export default function DeliveryTracker() {
       console.error('Error initializing map:', error);
       setMapError(error.message);
     }
+    }, 100); // Small delay to ensure DOM is ready
 
     return () => {
+      clearTimeout(timer);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
