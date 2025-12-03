@@ -21,6 +21,7 @@ const Deliveries = lazy(() => import('./pages/Deliveries'));
 const Cart = lazy(() => import('./pages/Cart'));
 const Checkout = lazy(() => import('./pages/Checkout'));
 const DeliveryTracker = lazy(() => import('./pages/DeliveryTracker'));
+const MapDemo = lazy(() => import('./pages/MapDemo'));
 const About = lazy(() => import('./pages/About'));
 
 // Loading fallback component
@@ -73,6 +74,7 @@ function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/track-delivery/:id?" element={<DeliveryTracker />} />
+          <Route path="/map-demo" element={<MapDemo />} />
 
           {/* Dashboard routes */}
           <Route
