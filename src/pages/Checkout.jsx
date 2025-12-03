@@ -9,6 +9,21 @@ import {
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 
+// Helper function to format address (handles both string and object)
+const formatAddress = (address) => {
+  if (!address) return '';
+  if (typeof address === 'string') return address;
+  if (typeof address === 'object') {
+    const parts = [];
+    if (address.rue) parts.push(address.rue);
+    if (address.ville) parts.push(address.ville);
+    if (address.codePostal) parts.push(address.codePostal);
+    if (address.pays) parts.push(address.pays);
+    return parts.join(', ') || JSON.stringify(address);
+  }
+  return String(address);
+};
+
 // Stripe components - loaded dynamically
 let Elements, CardElement, useStripe, useElements;
 let stripePromise = null;
@@ -111,8 +126,9 @@ export default function Checkout() {
       // Get user address
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       if (user.adresse) {
-        setUserAddress(user.adresse);
-        setShippingAddress(user.adresse);
+        const formattedAddr = formatAddress(user.adresse);
+        setUserAddress(formattedAddr);
+        setShippingAddress(formattedAddr);
       }
 
       // Try to load Stripe

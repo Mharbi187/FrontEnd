@@ -12,6 +12,21 @@ import { FiPackage, FiNavigation } from 'react-icons/fi';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 
+// Helper function to format address (handles both string and object)
+const formatAddress = (address) => {
+  if (!address) return '';
+  if (typeof address === 'string') return address;
+  if (typeof address === 'object') {
+    const parts = [];
+    if (address.rue) parts.push(address.rue);
+    if (address.ville) parts.push(address.ville);
+    if (address.codePostal) parts.push(address.codePostal);
+    if (address.pays) parts.push(address.pays);
+    return parts.join(', ') || '';
+  }
+  return String(address);
+};
+
 // Mapbox access token
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoibWhhcmJpMTIzIiwiYSI6ImNtaXA0cmM4NzA4MTQzaHF2amZjc3o1OTMifQ.1hZhsyjSLuVaUzP10sZcpg';
 
@@ -567,7 +582,7 @@ export default function DeliveryTracker() {
                 <div>
                   <p className="text-xs text-gray-500">Destination</p>
                   <p className="font-medium text-gray-900">
-                    {delivery?.adresseLivraison || '123 Avenue Habib Bourguiba, Tunis'}
+                    {formatAddress(delivery?.adresseLivraison) || '123 Avenue Habib Bourguiba, Tunis'}
                   </p>
                 </div>
               </div>
