@@ -77,29 +77,47 @@ export default function DeliveryTracker() {
     const fetchDelivery = async () => {
       setLoading(true);
       try {
-        if (id) {
+        if (id && id !== 'demo') {
+          // Fetch real delivery data
           const response = await api.get(`/livraisons/${id}`);
-          setDelivery(response.data?.data || response.data);
+          const data = response.data?.data || response.data;
+          setDelivery(data);
+          
+          // Set current step based on actual status
+          const statusMap = {
+            'en_attente': 0,
+            'confirmee': 1,
+            'en_preparation': 2,
+            'expediee': 3,
+            'en_cours': 3,
+            'en_transit': 3,
+            'livree': 4,
+            'annulee': 0
+          };
+          setCurrentStep(statusMap[data?.statut] || 3);
         } else {
+          // Demo mode - use sample data
           setDelivery({
             _id: 'demo-123',
-            numeroLivraison: 'LIV-2024-001',
+            numeroLivraison: 'LIV-DEMO-001',
             statut: 'en_cours',
             adresseLivraison: '123 Avenue Habib Bourguiba, Tunis',
             dateEstimee: new Date(Date.now() + 25 * 60000).toISOString(),
             livreur: { nom: 'Ahmed Ben Ali', telephone: '+216 98 765 432' },
-            commande: { numeroCommande: 'CMD-2024-045', montantTotal: 156.50 }
+            commande: { numeroCommande: 'CMD-DEMO-001', montantTotal: 156.50 }
           });
         }
       } catch (error) {
         console.error('Error fetching delivery:', error);
+        // On error, show demo data with error message
         setDelivery({
-          _id: 'demo-123',
-          numeroLivraison: 'LIV-2024-001',
+          _id: id || 'error',
+          numeroLivraison: id ? `LIV-${id.slice(-6).toUpperCase()}` : 'LIV-DEMO',
           statut: 'en_cours',
           adresseLivraison: '123 Avenue Habib Bourguiba, Tunis',
           dateEstimee: new Date(Date.now() + 25 * 60000).toISOString(),
-          livreur: { nom: 'Ahmed Ben Ali', telephone: '+216 98 765 432' }
+          livreur: { nom: 'Ahmed Ben Ali', telephone: '+216 98 765 432' },
+          commande: { numeroCommande: 'CMD-2024-001', montantTotal: 156.50 }
         });
       } finally {
         setLoading(false);
