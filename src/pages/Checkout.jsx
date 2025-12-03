@@ -1,18 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FaCreditCard, FaLock, FaShoppingCart, FaTruck, 
   FaCheckCircle, FaArrowLeft, FaSpinner, FaMapMarkerAlt,
   FaShieldAlt, FaMoneyBillWave
 } from 'react-icons/fa';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 
-// Initialize Stripe - Replace with your publishable key
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_key');
+// Stripe components - loaded dynamically
+let Elements, CardElement, useStripe, useElements;
+let stripePromise = null;
+
+// Initialize Stripe lazily
+const initStripe = async () => {
+  if (!stripePromise) {
+    try {
+      const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+      if (stripeKey && stripeKey !== 'pk_test_your_key') {
+        const { loadStripe } = await import('@stripe/stripe-js');
+        const stripeReact = await import('@stripe/react-stripe-js');
+        Elements = stripeReact.Elements;
+        CardElement = stripeReact.CardElement;
+        useStripe = stripeReact.useStripe;
+        useElements = stripeReact.useElements;
+        stripePromise = loadStripe(stripeKey);
+      }
+    } catch (err) {
+      console.error('Failed to load Stripe:', err);
+    }
+  }
+  return stripePromise;
+};
 
 // Card Element Styles
 const cardElementOptions = {
@@ -21,40 +41,122 @@ const cardElementOptions = {
       fontSize: '16px',
       color: '#1f2937',
       fontFamily: 'Inter, system-ui, sans-serif',
-      '::placeholder': {
-        color: '#9ca3af',
-      },
+      '::placeholder': { color: '#9ca3af' },
       iconColor: '#10b981',
     },
-    invalid: {
-      color: '#ef4444',
-      iconColor: '#ef4444',
-    },
+    invalid: { color: '#ef4444', iconColor: '#ef4444' },
   },
 };
 
-// Payment Form Component
-function CheckoutForm({ cartItems, totalAmount, shippingAddress, onSuccess }) {
-  const stripe = useStripe();
-  const elements = useElements();
+// Stripe Card Payment Form
+function StripeCardForm({ onPaymentMethod }) {
+  const stripe = useStripe?.();
+  const elements = useElements?.();
+  const [error, setError] = useState(null);
+
+  const handleCardChange = (event) => {
+    setError(event.error ? event.error.message : null);
+  };
+
+  // Pass stripe and elements up to parent
+  useEffect(() => {
+    if (stripe && elements) {
+      onPaymentMethod({ stripe, elements, CardElement });
+    }
+  }, [stripe, elements]);
+
+  if (!CardElement) return null;
+
+  return (
+    <div>
+      <div className="p-4 border-2 border-gray-200 rounded-xl focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-100 transition-all bg-white">
+        <CardElement options={cardElementOptions} onChange={handleCardChange} />
+      </div>
+      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+      <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+        <p className="text-xs text-blue-700">
+          <strong>Mode Test:</strong> Utilisez <code className="bg-blue-100 px-1 rounded">4242 4242 4242 4242</code> avec n'importe quelle date future et CVC.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Main Checkout Page
+export default function Checkout() {
+  const navigate = useNavigate();
+  const [cartItems, setCartItems] = useState([]);
+  const [shippingAddress, setShippingAddress] = useState('');
+  const [userAddress, setUserAddress] = useState('');
+  const [step, setStep] = useState(1);
+  const [orderResult, setOrderResult] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' or 'cash'
+  const [stripeLoaded, setStripeLoaded] = useState(false);
+  const [stripeRefs, setStripeRefs] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Load cart and initialize
+  useEffect(() => {
+    const init = async () => {
+      // Check cart first
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      if (cart.length === 0) {
+        navigate('/cart');
+        return;
+      }
+      setCartItems(cart);
 
-    if (paymentMethod === 'cash') {
-      // Cash on delivery - create order without Stripe
-      setIsProcessing(true);
+      // Get user address
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user.adresse) {
+        setUserAddress(user.adresse);
+        setShippingAddress(user.adresse);
+      }
+
+      // Try to load Stripe
       try {
+        await initStripe();
+        if (stripePromise) {
+          setStripeLoaded(true);
+        }
+      } catch (err) {
+        console.error('Stripe init error:', err);
+      }
+      
+      setIsLoading(false);
+    };
+    init();
+  }, [navigate]);
+
+  // Calculate totals
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.prix * (item.quantity || 1)), 0);
+  const shipping = 7;
+  const total = subtotal + shipping;
+
+  const handlePaymentSuccess = (result) => {
+    localStorage.removeItem('cart');
+    window.dispatchEvent(new Event('cartUpdated'));
+    setOrderResult(result);
+    setStep(3);
+  };
+
+  const handleSubmitPayment = async (e) => {
+    e.preventDefault();
+    setIsProcessing(true);
+    setPaymentError(null);
+
+    try {
+      if (paymentMethod === 'cash') {
+        // Cash on delivery
         const response = await api.post('/commandes', {
           produits: cartItems.map(item => ({
             produit: item._id,
-            quantite: item.quantity,
+            quantite: item.quantity || 1,
             prixUnitaire: item.prix
           })),
-          montantTotal: totalAmount,
+          montantTotal: total,
           adresseLivraison: shippingAddress,
           methodePaiement: 'especes',
           statutPaiement: 'en_attente'
@@ -62,227 +164,76 @@ function CheckoutForm({ cartItems, totalAmount, shippingAddress, onSuccess }) {
 
         if (response.data.success || response.data._id) {
           toast.success('Commande créée avec succès!');
-          onSuccess(response.data);
+          handlePaymentSuccess(response.data);
         }
-      } catch (error) {
-        toast.error(error.response?.data?.message || 'Erreur lors de la commande');
-      } finally {
-        setIsProcessing(false);
-      }
-      return;
-    }
-
-    // Card payment with Stripe
-    if (!stripe || !elements) {
-      return;
-    }
-
-    setIsProcessing(true);
-    setPaymentError(null);
-
-    try {
-      // Create payment intent on backend
-      const { data } = await api.post('/payments/create-payment-intent', {
-        amount: totalAmount,
-        currency: 'tnd',
-        metadata: {
-          itemCount: cartItems.length
+      } else {
+        // Card payment with Stripe
+        if (!stripeRefs?.stripe || !stripeRefs?.elements) {
+          throw new Error('Stripe non initialisé');
         }
-      });
 
-      if (!data.success) {
-        throw new Error(data.message || 'Erreur de paiement');
-      }
-
-      // Confirm payment with Stripe
-      const { error, paymentIntent } = await stripe.confirmCardPayment(
-        data.clientSecret,
-        {
-          payment_method: {
-            card: elements.getElement(CardElement),
-          },
-        }
-      );
-
-      if (error) {
-        setPaymentError(error.message);
-        toast.error(error.message);
-      } else if (paymentIntent.status === 'succeeded') {
-        // Confirm payment and create order on backend
-        const confirmResponse = await api.post('/payments/confirm-payment', {
-          paymentIntentId: paymentIntent.id,
-          orderData: {
-            items: cartItems.map(item => ({
-              productId: item._id,
-              quantity: item.quantity,
-              prix: item.prix
-            })),
-            shippingAddress
-          }
+        const { data } = await api.post('/payments/create-payment-intent', {
+          amount: total,
+          currency: 'tnd',
+          metadata: { itemCount: cartItems.length }
         });
 
-        if (confirmResponse.data.success) {
-          toast.success('Paiement réussi!');
-          onSuccess(confirmResponse.data);
+        if (!data.success) {
+          throw new Error(data.message || 'Erreur de paiement');
+        }
+
+        const { error, paymentIntent } = await stripeRefs.stripe.confirmCardPayment(
+          data.clientSecret,
+          {
+            payment_method: {
+              card: stripeRefs.elements.getElement(stripeRefs.CardElement),
+            },
+          }
+        );
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        if (paymentIntent.status === 'succeeded') {
+          const confirmResponse = await api.post('/payments/confirm-payment', {
+            paymentIntentId: paymentIntent.id,
+            orderData: {
+              items: cartItems.map(item => ({
+                productId: item._id,
+                quantity: item.quantity || 1,
+                prix: item.prix
+              })),
+              shippingAddress
+            }
+          });
+
+          if (confirmResponse.data.success) {
+            toast.success('Paiement réussi!');
+            handlePaymentSuccess(confirmResponse.data);
+          }
         }
       }
     } catch (error) {
       console.error('Payment error:', error);
       setPaymentError(error.response?.data?.message || error.message || 'Erreur de paiement');
-      toast.error('Erreur lors du paiement');
+      toast.error(error.message || 'Erreur lors du paiement');
     } finally {
       setIsProcessing(false);
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Payment Method Selection */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-3">
-          Mode de paiement
-        </label>
-        <div className="grid grid-cols-2 gap-4">
-          <button
-            type="button"
-            onClick={() => setPaymentMethod('card')}
-            className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-              paymentMethod === 'card'
-                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            <FaCreditCard className="text-2xl" />
-            <span className="font-medium">Carte bancaire</span>
-            <span className="text-xs text-gray-500">Paiement sécurisé</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setPaymentMethod('cash')}
-            className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-              paymentMethod === 'cash'
-                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            <FaMoneyBillWave className="text-2xl" />
-            <span className="font-medium">À la livraison</span>
-            <span className="text-xs text-gray-500">Payer en espèces</span>
-          </button>
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+        <div className="text-center">
+          <FaSpinner className="animate-spin text-4xl text-emerald-600 mx-auto mb-4" />
+          <p className="text-gray-600">Chargement...</p>
         </div>
       </div>
-
-      {/* Card Input - Only show for card payment */}
-      <AnimatePresence>
-        {paymentMethod === 'card' && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-          >
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              Informations de la carte
-            </label>
-            <div className="p-4 border-2 border-gray-200 rounded-xl focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-100 transition-all bg-white">
-              <CardElement options={cardElementOptions} />
-            </div>
-            
-            {/* Test Card Info */}
-            <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-              <p className="text-xs text-blue-700">
-                <strong>Mode Test:</strong> Utilisez <code className="bg-blue-100 px-1 rounded">4242 4242 4242 4242</code> avec n'importe quelle date future et CVC.
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Error Message */}
-      {paymentError && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm"
-        >
-          {paymentError}
-        </motion.div>
-      )}
-
-      {/* Security Badge */}
-      <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
-        <FaShieldAlt className="text-emerald-500" />
-        <span>Paiement 100% sécurisé</span>
-        <FaLock className="text-emerald-500" />
-      </div>
-
-      {/* Submit Button */}
-      <motion.button
-        type="submit"
-        disabled={isProcessing || (paymentMethod === 'card' && !stripe)}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className={`w-full py-4 px-6 rounded-xl font-bold text-white flex items-center justify-center gap-3 shadow-lg transition-all ${
-          isProcessing
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/30'
-        }`}
-      >
-        {isProcessing ? (
-          <>
-            <FaSpinner className="animate-spin" />
-            Traitement en cours...
-          </>
-        ) : (
-          <>
-            <FaLock />
-            {paymentMethod === 'card' ? `Payer ${totalAmount.toFixed(2)} TND` : `Confirmer la commande`}
-          </>
-        )}
-      </motion.button>
-    </form>
-  );
-}
-
-// Main Checkout Page
-export default function Checkout() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [cartItems, setCartItems] = useState([]);
-  const [shippingAddress, setShippingAddress] = useState('');
-  const [userAddress, setUserAddress] = useState('');
-  const [step, setStep] = useState(1); // 1: Address, 2: Payment, 3: Success
-  const [orderResult, setOrderResult] = useState(null);
-
-  // Load cart from localStorage
-  useEffect(() => {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    if (cart.length === 0) {
-      navigate('/cart');
-      return;
-    }
-    setCartItems(cart);
-
-    // Get user address from token/profile
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (user.adresse) {
-      setUserAddress(user.adresse);
-      setShippingAddress(user.adresse);
-    }
-  }, [navigate]);
-
-  // Calculate totals
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.prix * (item.quantity || 1)), 0);
-  const shipping = 7; // Fixed shipping cost
-  const total = subtotal + shipping;
-
-  const handlePaymentSuccess = (result) => {
-    // Clear cart
-    localStorage.removeItem('cart');
-    window.dispatchEvent(new Event('cartUpdated'));
-    
-    setOrderResult(result);
-    setStep(3);
-  };
+    );
+  }
 
   // Success State
   if (step === 3) {
@@ -307,13 +258,13 @@ export default function Checkout() {
             Merci pour votre commande. Vous recevrez un email de confirmation.
           </p>
 
-          {orderResult?.order && (
+          {(orderResult?.order || orderResult?._id) && (
             <div className="bg-emerald-50 rounded-xl p-4 mb-6">
               <p className="text-sm text-emerald-700">
-                Numéro de commande: <strong>#{orderResult.order.id?.slice(-8).toUpperCase()}</strong>
+                Numéro de commande: <strong>#{(orderResult.order?.id || orderResult._id)?.slice(-8).toUpperCase()}</strong>
               </p>
               <p className="text-sm text-emerald-700">
-                Montant: <strong>{orderResult.order.montant?.toFixed(2)} TND</strong>
+                Montant: <strong>{(orderResult.order?.montant || orderResult.montantTotal || total).toFixed(2)} TND</strong>
               </p>
             </div>
           )}
@@ -394,6 +345,7 @@ export default function Checkout() {
                   <div className="space-y-4">
                     {userAddress && (
                       <button
+                        type="button"
                         onClick={() => setShippingAddress(userAddress)}
                         className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
                           shippingAddress === userAddress
@@ -420,7 +372,8 @@ export default function Checkout() {
                     </div>
 
                     <motion.button
-                      onClick={() => step === 1 && shippingAddress && setStep(2)}
+                      type="button"
+                      onClick={() => shippingAddress && setStep(2)}
                       disabled={!shippingAddress}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -449,6 +402,7 @@ export default function Checkout() {
                       Paiement
                     </h2>
                     <button
+                      type="button"
                       onClick={() => setStep(1)}
                       className="text-emerald-600 hover:text-emerald-700 font-medium text-sm"
                     >
@@ -462,14 +416,105 @@ export default function Checkout() {
                     <p className="font-medium text-gray-900">{shippingAddress}</p>
                   </div>
 
-                  <Elements stripe={stripePromise}>
-                    <CheckoutForm
-                      cartItems={cartItems}
-                      totalAmount={total}
-                      shippingAddress={shippingAddress}
-                      onSuccess={handlePaymentSuccess}
-                    />
-                  </Elements>
+                  <form onSubmit={handleSubmitPayment} className="space-y-6">
+                    {/* Payment Method Selection */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-3">
+                        Mode de paiement
+                      </label>
+                      <div className="grid grid-cols-2 gap-4">
+                        {stripeLoaded && (
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMethod('card')}
+                            className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                              paymentMethod === 'card'
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <FaCreditCard className="text-2xl" />
+                            <span className="font-medium">Carte bancaire</span>
+                            <span className="text-xs text-gray-500">Paiement sécurisé</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethod('cash')}
+                          className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                            paymentMethod === 'cash'
+                              ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                              : 'border-gray-200 hover:border-gray-300'
+                          } ${!stripeLoaded ? 'col-span-2' : ''}`}
+                        >
+                          <FaMoneyBillWave className="text-2xl" />
+                          <span className="font-medium">À la livraison</span>
+                          <span className="text-xs text-gray-500">Payer en espèces</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Card Input - Only show for card payment */}
+                    <AnimatePresence>
+                      {paymentMethod === 'card' && stripeLoaded && Elements && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                        >
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            Informations de la carte
+                          </label>
+                          <Elements stripe={stripePromise}>
+                            <StripeCardForm onPaymentMethod={setStripeRefs} />
+                          </Elements>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Error Message */}
+                    {paymentError && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm"
+                      >
+                        {paymentError}
+                      </motion.div>
+                    )}
+
+                    {/* Security Badge */}
+                    <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
+                      <FaShieldAlt className="text-emerald-500" />
+                      <span>Paiement 100% sécurisé</span>
+                      <FaLock className="text-emerald-500" />
+                    </div>
+
+                    {/* Submit Button */}
+                    <motion.button
+                      type="submit"
+                      disabled={isProcessing || (paymentMethod === 'card' && !stripeRefs)}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`w-full py-4 px-6 rounded-xl font-bold text-white flex items-center justify-center gap-3 shadow-lg transition-all ${
+                        isProcessing
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/30'
+                      }`}
+                    >
+                      {isProcessing ? (
+                        <>
+                          <FaSpinner className="animate-spin" />
+                          Traitement en cours...
+                        </>
+                      ) : (
+                        <>
+                          <FaLock />
+                          {paymentMethod === 'card' ? `Payer ${total.toFixed(2)} TND` : `Confirmer la commande`}
+                        </>
+                      )}
+                    </motion.button>
+                  </form>
                 </motion.div>
               )}
             </div>
@@ -486,10 +531,10 @@ export default function Checkout() {
               {/* Cart Items */}
               <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
                 {cartItems.map((item, index) => (
-                  <div key={index} className="flex gap-3">
+                  <div key={item._id || index} className="flex gap-3">
                     <div className="w-16 h-16 bg-gray-100 rounded-xl flex-shrink-0 overflow-hidden">
-                      {item.image ? (
-                        <img src={item.image} alt={item.nom} className="w-full h-full object-cover" />
+                      {item.image || item.imageURL ? (
+                        <img src={item.image || item.imageURL} alt={item.nom} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400">
                           <FaShoppingCart />
@@ -531,7 +576,7 @@ export default function Checkout() {
                   <FaTruck title="Livraison rapide" />
                 </div>
                 <p className="text-center text-xs text-gray-500 mt-2">
-                  Paiement sécurisé par Stripe
+                  Paiement sécurisé
                 </p>
               </div>
             </div>
