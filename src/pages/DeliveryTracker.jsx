@@ -434,7 +434,18 @@ export default function DeliveryTracker() {
       <div className="flex flex-col lg:flex-row h-[calc(100vh-80px)]">
         {/* Map Container */}
         <div className="flex-1 relative min-h-[400px] lg:min-h-0">
-          <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
+          <div 
+            ref={mapContainer} 
+            style={{ 
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              right: 0, 
+              bottom: 0,
+              width: '100%',
+              height: '100%'
+            }} 
+          />
           
           {/* Progress overlay */}
           <div className="absolute bottom-4 left-4 right-4 lg:right-auto lg:w-80">
@@ -483,6 +494,18 @@ export default function DeliveryTracker() {
               padding: 12px 16px;
               border-radius: 12px;
               font-weight: 600;
+            }
+            .mapboxgl-map {
+              width: 100% !important;
+              height: 100% !important;
+            }
+            .mapboxgl-canvas {
+              width: 100% !important;
+              height: 100% !important;
+            }
+            .mapboxgl-canvas-container {
+              width: 100% !important;
+              height: 100% !important;
             }
           `}</style>
         </div>
