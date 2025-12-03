@@ -127,17 +127,22 @@ export default function DeliveryTracker() {
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: warehouseLocation,
-      zoom: 13,
-      pitch: is3DEnabled ? 60 : 0,
-      bearing: -20,
-      antialias: true
-    });
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: warehouseLocation,
+        zoom: 13,
+        pitch: is3DEnabled ? 60 : 0,
+        bearing: -20,
+        antialias: true
+      });
 
-    map.current.on('load', () => {
+      map.current.on('error', (e) => {
+        console.error('Mapbox error:', e);
+      });
+
+      map.current.on('load', () => {
       // Add 3D buildings layer
       if (is3DEnabled) {
         const layers = map.current.getStyle().layers;
@@ -285,6 +290,10 @@ export default function DeliveryTracker() {
     // Add navigation controls
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
+    } catch (error) {
+      console.error('Map initialization error:', error);
+    }
+
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
@@ -424,8 +433,8 @@ export default function DeliveryTracker() {
 
       <div className="flex flex-col lg:flex-row h-[calc(100vh-80px)]">
         {/* Map Container */}
-        <div className="flex-1 relative">
-          <div ref={mapContainer} className="w-full h-full" />
+        <div className="flex-1 relative min-h-[400px] lg:min-h-0">
+          <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
           
           {/* Progress overlay */}
           <div className="absolute bottom-4 left-4 right-4 lg:right-auto lg:w-80">

@@ -659,7 +659,8 @@ export default function ClientDashboard() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.1 }}
-                        className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100"
+                        onClick={() => navigate(`/track-delivery/${delivery._id}`)}
+                        className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 cursor-pointer hover:shadow-xl hover:border-emerald-200 transition-all"
                       >
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-4">
@@ -669,7 +670,10 @@ export default function ClientDashboard() {
                             <div>
                               <h4 className="font-bold text-gray-900">Livraison #{delivery._id?.slice(-8) || idx}</h4>
                               <p className="text-sm text-gray-500 flex items-center gap-2">
-                                <FiMapPin size={14} /> {delivery.adresseLivraison || 'Adresse non spécifiée'}
+                                <FiMapPin size={14} /> 
+                                {typeof delivery.adresseLivraison === 'object' 
+                                  ? [delivery.adresseLivraison.rue, delivery.adresseLivraison.ville].filter(Boolean).join(', ') || 'Adresse non spécifiée'
+                                  : delivery.adresseLivraison || 'Adresse non spécifiée'}
                               </p>
                             </div>
                           </div>
@@ -698,6 +702,20 @@ export default function ClientDashboard() {
                               </span>
                             </div>
                           )}
+                        </div>
+
+                        {/* Track Button */}
+                        <div className="mt-4 flex justify-end">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/track-delivery/${delivery._id}`);
+                            }}
+                            className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-medium text-sm hover:from-emerald-600 hover:to-teal-700 transition-all flex items-center gap-2"
+                          >
+                            <FiMapPin size={16} />
+                            Suivre sur la carte
+                          </button>
                         </div>
                       </motion.div>
                     )) : (
