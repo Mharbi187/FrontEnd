@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
 // Helper function to format address (handles both string and object)
@@ -15,6 +15,7 @@ const formatAddress = (addr) => {
 };
 
 const Deliveries = () => {
+  const navigate = useNavigate();
   const [deliveries, setDeliveries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -259,7 +260,8 @@ const Deliveries = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all"
+                  onClick={() => navigate(`/track-delivery/${id}`)}
+                  className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all cursor-pointer hover:border-emerald-200"
                 >
                   <div className="p-5">
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
