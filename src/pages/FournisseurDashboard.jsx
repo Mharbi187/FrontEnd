@@ -93,16 +93,16 @@ export default function FournisseurDashboard() {
         setProducts(productsRes.data?.data || productsRes.data || []);
         setCategories(categoriesRes.data?.data || categoriesRes.data || []);
         
-        // Try fetching orders/deliveries
+        // Try fetching fournisseur-specific orders/deliveries
         try {
-          const ordersRes = await api.get('/commandes');
+          const ordersRes = await api.get('/commandes/fournisseur');
           setOrders(ordersRes.data?.data || ordersRes.data || []);
-        } catch (e) { console.log('No orders access'); }
+        } catch (e) { 
+          // Silently fail - fournisseur may not have orders access
+        }
         
-        try {
-          const deliveriesRes = await api.get('/livraisons');
-          setDeliveries(deliveriesRes.data?.data || deliveriesRes.data || []);
-        } catch (e) { console.log('No deliveries access'); }
+        // Fournisseur doesn't need livraisons - remove this call
+        // Deliveries are managed by clients and admin
         
       } catch (error) {
         console.error('Error fetching data:', error);
