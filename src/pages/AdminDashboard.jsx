@@ -425,27 +425,28 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
       {/* Top bar */}
-      <div className="flex justify-between items-center bg-white/80 backdrop-blur-xl p-6 shadow-lg border-b border-gray-200">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Admin Dashboard</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/80 backdrop-blur-xl p-4 sm:p-6 shadow-lg border-b border-gray-200">
+        <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Admin Dashboard</h1>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-2 sm:space-x-3 flex-wrap">
           {/* Notifications */}
           <NotificationPanel userRole="admin" />
 
           {/* Profile shortcut */}
           <button
             onClick={() => navigate("/profile")}
-            className="flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 transition-all shadow-lg transform hover:scale-105"
+            className="flex items-center px-3 py-2 sm:px-4 sm:py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 transition-all shadow-lg transform hover:scale-105 text-sm sm:text-base"
           >
-            <FaUser className="mr-2" /> Profile
+            <FaUser className="mr-1 sm:mr-2" /> <span className="hidden sm:inline">Profile</span>
           </button>
 
           {/* Logout button */}
           <button
             onClick={handleLogout}
-            className="bg-gradient-to-r from-red-500 to-red-600 text-white px-5 py-3 rounded-xl hover:from-red-600 hover:to-red-700 transition-all shadow-lg transform hover:scale-105"
+            className="bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-2 sm:px-5 sm:py-3 rounded-xl hover:from-red-600 hover:to-red-700 transition-all shadow-lg transform hover:scale-105 text-sm sm:text-base"
           >
-            Déconnexion
+            <span className="hidden sm:inline">Déconnexion</span>
+            <span className="sm:hidden">Exit</span>
           </button>
         </div>
       </div>
@@ -453,16 +454,16 @@ export default function AdminDashboard() {
       {/* Main */}
       
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
         {/* Navigation Tabs */}
         <div className="border-b-2 border-gray-200 bg-white/50 backdrop-blur-sm rounded-t-xl">
-          <nav className="-mb-px flex space-x-2 overflow-x-auto">
+          <nav className="-mb-px flex space-x-1 sm:space-x-2 overflow-x-auto pb-px scrollbar-hide">
             {[
-              { id: "users", name: "Gestion Utilisateurs", icon: <FiUsers className="mr-2" /> },
-              { id: "categories", name: "Catégories", icon: <FiList className="mr-2" /> },
-              { id: "orders", name: "Commandes", icon: <FiShoppingCart className="mr-2" /> },
-              { id: "reports", name: "Rapports", icon: <FiBarChart2 className="mr-2" /> },
-              { id: "alerts", name: "Alertes Stock", icon: <FiAlertCircle className="mr-2" /> },
+              { id: "users", name: "Utilisateurs", fullName: "Gestion Utilisateurs", icon: <FiUsers className="mr-1 sm:mr-2" /> },
+              { id: "categories", name: "Catégories", fullName: "Catégories", icon: <FiList className="mr-1 sm:mr-2" /> },
+              { id: "orders", name: "Commandes", fullName: "Commandes", icon: <FiShoppingCart className="mr-1 sm:mr-2" /> },
+              { id: "reports", name: "Rapports", fullName: "Rapports", icon: <FiBarChart2 className="mr-1 sm:mr-2" /> },
+              { id: "alerts", name: "Alertes", fullName: "Alertes Stock", icon: <FiAlertCircle className="mr-1 sm:mr-2" /> },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -471,10 +472,11 @@ export default function AdminDashboard() {
                   activeTab === tab.id 
                     ? "border-emerald-600 text-emerald-600 bg-emerald-50" 
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                } whitespace-nowrap py-4 px-4 border-b-2 font-semibold text-sm flex items-center transition-all rounded-t-lg`}
+                } whitespace-nowrap py-3 sm:py-4 px-3 sm:px-4 border-b-2 font-semibold text-xs sm:text-sm flex items-center transition-all rounded-t-lg`}
               >
                 {tab.icon}
-                {tab.name}
+                <span className="hidden sm:inline">{tab.fullName}</span>
+                <span className="sm:hidden">{tab.name}</span>
               </button>
             ))}
           </nav>
@@ -491,13 +493,13 @@ export default function AdminDashboard() {
           {/* USERS */}
           {activeTab === "users" && (
             <div>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-800">Gestion des Utilisateurs</h2>
-                <div className="flex items-center space-x-2">
-                  <button onClick={() => navigate('/admin-create-user')} className="flex items-center px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 shadow-lg transition-all transform hover:scale-105">
-                    <FiUserPlus className="mr-2" /> Ajouter
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Gestion des Utilisateurs</h2>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button onClick={() => navigate('/admin-create-user')} className="flex items-center px-3 py-2 sm:px-4 sm:py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 shadow-lg transition-all transform hover:scale-105 text-sm">
+                    <FiUserPlus className="mr-1 sm:mr-2" /> Ajouter
                   </button>
-                  <button onClick={fetchUsers} className="px-4 py-2 border-2 border-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all">Rafraîchir</button>
+                  <button onClick={fetchUsers} className="px-3 py-2 sm:px-4 sm:py-2 border-2 border-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-50 transition-all">Rafraîchir</button>
                 </div>
               </div>
 

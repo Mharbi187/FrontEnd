@@ -25,7 +25,7 @@ ChartJS.register(
 
 export default function FournisseurDashboard() {
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('overview');
   const [userName, setUserName] = useState('Fournisseur');
   const [products, setProducts] = useState([]);
@@ -34,6 +34,19 @@ export default function FournisseurDashboard() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Handle resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) setSidebarOpen(true);
+      else setSidebarOpen(false);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // Product Modal State
   const [showProductModal, setShowProductModal] = useState(false);
@@ -236,11 +249,25 @@ export default function FournisseurDashboard() {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Mobile Overlay */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       {/* Sidebar */}
       <motion.aside
         initial={false}
-        animate={{ width: sidebarOpen ? 280 : 80 }}
-        className="bg-gradient-to-b from-indigo-900 via-indigo-800 to-purple-900 text-white flex flex-col shadow-2xl z-20"
+        animate={{ 
+          width: sidebarOpen ? 280 : (isMobile ? 0 : 80),
+          x: isMobile && !sidebarOpen ? -280 : 0
+        }}
+        className={`${
+          isMobile ? 'fixed left-0 top-0 h-full z-40' : 'relative'
+        } bg-gradient-to-b from-indigo-900 via-indigo-800 to-purple-900 text-white flex flex-col shadow-2xl`}
+        style={{ minWidth: isMobile && !sidebarOpen ? 0 : (sidebarOpen ? 280 : 80) }}
       >
         {/* Logo */}
         <div className="p-6 border-b border-white/10">
@@ -344,19 +371,19 @@ export default function FournisseurDashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between shadow-sm gap-2">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors flex-shrink-0">
               {sidebarOpen ? <FiX size={20} /> : <FiMenu size={20} />}
             </button>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Bienvenue, {userName}!</h1>
-              <p className="text-sm text-gray-500">Gérez votre activité fournisseur</p>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-xl font-bold text-gray-900 truncate">Bienvenue, {userName}!</h1>
+              <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">Gérez votre activité fournisseur</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="relative hidden md:block">
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+            <div className="relative hidden lg:block">
               <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
@@ -371,15 +398,15 @@ export default function FournisseurDashboard() {
 
             <button
               onClick={() => { setEditingProduct(null); setProductForm({ nom: '', description: '', prix: '', quantiteStock: '', categorie: '', imageURL: '', statutProduit: 'Disponible' }); setShowProductModal(true); }}
-              className="btn-primary flex items-center gap-2"
+              className="btn-primary flex items-center gap-1 sm:gap-2 text-sm sm:text-base px-2 sm:px-4 py-2"
             >
-              <FaPlus /> Nouveau Produit
+              <FaPlus /> <span className="hidden sm:inline">Nouveau Produit</span><span className="sm:hidden">Ajouter</span>
             </button>
           </div>
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeSection}

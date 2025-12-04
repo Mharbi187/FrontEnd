@@ -29,7 +29,7 @@ ChartJS.register(
 
 export default function ClientDashboard() {
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('overview');
   const [userName, setUserName] = useState('Client');
   const [orders, setOrders] = useState([]);
@@ -38,6 +38,19 @@ export default function ClientDashboard() {
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [wishlistItems, setWishlistItems] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Handle resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) setSidebarOpen(true);
+      else setSidebarOpen(false);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Update cart count from localStorage
   const updateCartCount = () => {
@@ -215,11 +228,25 @@ export default function ClientDashboard() {
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Mobile Overlay */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       {/* Sidebar */}
       <motion.aside
         initial={false}
-        animate={{ width: sidebarOpen ? 280 : 80 }}
-        className="bg-gradient-to-b from-emerald-800 via-emerald-700 to-teal-800 text-white flex flex-col shadow-2xl z-20"
+        animate={{ 
+          width: sidebarOpen ? 280 : (isMobile ? 0 : 80),
+          x: isMobile && !sidebarOpen ? -280 : 0
+        }}
+        className={`${
+          isMobile ? 'fixed left-0 top-0 h-full z-40' : 'relative'
+        } bg-gradient-to-b from-emerald-800 via-emerald-700 to-teal-800 text-white flex flex-col shadow-2xl`}
+        style={{ minWidth: isMobile && !sidebarOpen ? 0 : (sidebarOpen ? 280 : 80) }}
       >
         {/* Logo */}
         <div className="p-6 border-b border-white/10">
@@ -329,22 +356,22 @@ export default function ClientDashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-4">
+        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
             >
               {sidebarOpen ? <FiX size={20} /> : <FiMenu size={20} />}
             </button>
-            <h1 className="text-xl font-bold text-gray-900">
-              Bonjour, {userName}! 👋
+            <h1 className="text-base sm:text-xl font-bold text-gray-900 truncate">
+              <span className="hidden sm:inline">Bonjour, </span>{userName}<span className="hidden sm:inline">! 👋</span>
             </h1>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* Search */}
-            <div className="relative hidden md:block">
+            <div className="relative hidden lg:block">
               <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
@@ -367,7 +394,7 @@ export default function ClientDashboard() {
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeSection}
