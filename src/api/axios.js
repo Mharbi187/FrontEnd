@@ -55,9 +55,16 @@ api.interceptors.response.use(
       window.location.href = '/login?error=session_expired';
     }
     
-    // Handle 400 Bad Request specifically
+    // Handle 400 Bad Request specifically - only log in development
     if (error.response?.status === 400) {
-      console.error('Bad Request Details:', error.response.data);
+      if (import.meta.env.DEV) {
+        console.warn('Bad Request:', error.config?.url);
+      }
+      return Promise.reject(error.response.data);
+    }
+    
+    // Handle 404 Not Found - don't log, just reject
+    if (error.response?.status === 404) {
       return Promise.reject(error.response.data);
     }
     
