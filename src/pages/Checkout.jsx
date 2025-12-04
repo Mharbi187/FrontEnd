@@ -163,20 +163,46 @@ export default function Checkout() {
     setIsProcessing(true);
     setPaymentError(null);
 
+    // Validate before submitting
+    if (!shippingAddress || shippingAddress.trim() === '') {
+      setPaymentError('Veuillez entrer une adresse de livraison');
+      toast.error('Adresse de livraison requise');
+      setIsProcessing(false);
+      return;
+    }
+
+    if (!cartItems || cartItems.length === 0) {
+      setPaymentError('Votre panier est vide');
+      toast.error('Panier vide');
+      setIsProcessing(false);
+      return;
+    }
+
+    const calculatedTotal = subtotal + shipping;
+    if (!calculatedTotal || calculatedTotal <= 0) {
+      setPaymentError('Montant invalide');
+      toast.error('Erreur de calcul du montant');
+      setIsProcessing(false);
+      return;
+    }
+
     try {
       if (paymentMethod === 'cash') {
         // Cash on delivery
-        const response = await api.post('/commandes', {
+        const orderData = {
           produits: cartItems.map(item => ({
             produit: item._id,
             quantite: item.quantity || 1,
-            prixUnitaire: item.prix
+            prixUnitaire: item.prix || 0
           })),
-          montantTotal: total,
-          adresseLivraison: shippingAddress,
+          montantTotal: calculatedTotal,
+          adresseLivraison: shippingAddress.trim(),
           methodePaiement: 'especes',
           statutPaiement: 'en_attente'
-        });
+        };
+        
+        console.log('Creating order with data:', orderData);
+        const response = await api.post('/commandes', orderData);
 
         if (response.data.success || response.data._id) {
           toast.success('Commande créée avec succès!');
@@ -383,18 +409,22 @@ export default function Checkout() {
                         onChange={(e) => setShippingAddress(e.target.value)}
                         placeholder="Entrez votre adresse complète..."
                         rows={3}
+                        required
                         className="w-full border-2 border-gray-200 rounded-xl p-4 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all resize-none"
                       />
+                      {!shippingAddress?.trim() && (
+                        <p className="text-red-500 text-sm mt-1">* Adresse requise</p>
+                      )}
                     </div>
 
                     <motion.button
                       type="button"
-                      onClick={() => shippingAddress && setStep(2)}
-                      disabled={!shippingAddress}
+                      onClick={() => shippingAddress?.trim() && setStep(2)}
+                      disabled={!shippingAddress?.trim()}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className={`w-full py-4 px-6 rounded-xl font-bold text-white flex items-center justify-center gap-2 ${
-                        shippingAddress
+                        shippingAddress?.trim()
                           ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg shadow-emerald-500/30'
                           : 'bg-gray-300 cursor-not-allowed'
                       }`}
