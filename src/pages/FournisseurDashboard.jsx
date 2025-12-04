@@ -39,7 +39,13 @@ export default function FournisseurDashboard() {
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [productForm, setProductForm] = useState({
-    nom: '', description: '', prix: '', quantite: '', categorie: ''
+    nom: '',
+    description: '',
+    prix: '',
+    quantiteStock: '',
+    categorie: '',
+    imageURL: '',
+    statutProduit: 'Disponible'
   });
 
   // Check auth and decode token
@@ -114,7 +120,15 @@ export default function FournisseurDashboard() {
       }
       setShowProductModal(false);
       setEditingProduct(null);
-      setProductForm({ nom: '', description: '', prix: '', quantite: '', categorie: '' });
+      setProductForm({
+        nom: '',
+        description: '',
+        prix: '',
+        quantiteStock: '',
+        categorie: '',
+        imageURL: '',
+        statutProduit: 'Disponible'
+      });
       
       // Refresh products
       const res = await api.get('/produits');
@@ -142,8 +156,10 @@ export default function FournisseurDashboard() {
       nom: product.nom || '',
       description: product.description || '',
       prix: product.prix || '',
-      quantite: product.quantite || product.stock || '',
-      categorie: product.categorie?._id || product.categorie || ''
+      quantiteStock: product.quantiteStock || product.quantite || product.stock || '',
+      categorie: product.categorie?._id || product.categorie || '',
+      imageURL: product.imageURL || '',
+      statutProduit: product.statutProduit || 'Disponible'
     });
     setShowProductModal(true);
   };
@@ -354,7 +370,7 @@ export default function FournisseurDashboard() {
             <NotificationPanel userRole="fournisseur" />
 
             <button
-              onClick={() => { setEditingProduct(null); setProductForm({ nom: '', description: '', prix: '', quantite: '', categorie: '' }); setShowProductModal(true); }}
+              onClick={() => { setEditingProduct(null); setProductForm({ nom: '', description: '', prix: '', quantiteStock: '', categorie: '', imageURL: '', statutProduit: 'Disponible' }); setShowProductModal(true); }}
               className="btn-primary flex items-center gap-2"
             >
               <FaPlus /> Nouveau Produit
@@ -493,7 +509,7 @@ export default function FournisseurDashboard() {
                       <p className="text-gray-500">{filteredProducts.length} produits trouvés</p>
                     </div>
                     <button
-                      onClick={() => { setEditingProduct(null); setProductForm({ nom: '', description: '', prix: '', quantite: '', categorie: '' }); setShowProductModal(true); }}
+                      onClick={() => { setEditingProduct(null); setProductForm({ nom: '', description: '', prix: '', quantiteStock: '', categorie: '', imageURL: '', statutProduit: 'Disponible' }); setShowProductModal(true); }}
                       className="btn-primary flex items-center gap-2"
                     >
                       <FaPlus /> Ajouter un produit
@@ -837,54 +853,63 @@ export default function FournisseurDashboard() {
                 {editingProduct ? 'Modifier le produit' : 'Nouveau produit'}
               </h3>
               
-              <form onSubmit={handleProductSubmit} className="space-y-4">
+              <form onSubmit={handleProductSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nom du produit</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nom du produit *</label>
                   <input
                     type="text"
                     value={productForm.nom}
                     onChange={(e) => setProductForm({ ...productForm, nom: e.target.value })}
                     className="input-field"
+                    placeholder="Ex: iPhone 15 Pro"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
                   <textarea
                     value={productForm.description}
                     onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
                     className="input-field"
                     rows="3"
+                    placeholder="Décrivez votre produit..."
+                    required
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Prix (TND)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Prix (TND) *</label>
                     <input
                       type="number"
+                      step="0.01"
+                      min="0"
                       value={productForm.prix}
                       onChange={(e) => setProductForm({ ...productForm, prix: e.target.value })}
                       className="input-field"
+                      placeholder="0.00"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Quantité</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Quantité en stock *</label>
                     <input
                       type="number"
-                      value={productForm.quantite}
-                      onChange={(e) => setProductForm({ ...productForm, quantite: e.target.value })}
+                      min="0"
+                      value={productForm.quantiteStock}
+                      onChange={(e) => setProductForm({ ...productForm, quantiteStock: e.target.value })}
                       className="input-field"
+                      placeholder="0"
                       required
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie *</label>
                   <select
                     value={productForm.categorie}
                     onChange={(e) => setProductForm({ ...productForm, categorie: e.target.value })}
                     className="input-field"
+                    required
                   >
                     <option value="">Sélectionner une catégorie</option>
                     {categories.map((cat) => (
@@ -892,8 +917,42 @@ export default function FournisseurDashboard() {
                     ))}
                   </select>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Image URL *</label>
+                  <input
+                    type="url"
+                    value={productForm.imageURL}
+                    onChange={(e) => setProductForm({ ...productForm, imageURL: e.target.value })}
+                    className="input-field"
+                    placeholder="https://exemple.com/image.jpg"
+                    required
+                  />
+                  {productForm.imageURL && (
+                    <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+                      <p className="text-xs text-gray-500 mb-1">Aperçu:</p>
+                      <img 
+                        src={productForm.imageURL} 
+                        alt="Aperçu" 
+                        className="h-20 w-20 object-cover rounded-lg border"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Statut du produit</label>
+                  <select
+                    value={productForm.statutProduit}
+                    onChange={(e) => setProductForm({ ...productForm, statutProduit: e.target.value })}
+                    className="input-field"
+                  >
+                    <option value="Disponible">Disponible</option>
+                    <option value="En Rupture">En Rupture</option>
+                    <option value="Archivé">Archivé</option>
+                  </select>
+                </div>
                 
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-3 pt-4 sticky bottom-0 bg-white">
                   <button type="button" onClick={() => setShowProductModal(false)} className="flex-1 btn-secondary">
                     Annuler
                   </button>
